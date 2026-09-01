@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-09-01T18:23:02.312804+00:00",
+  "augmentation_pipeline": [
+    "HorizontalFlip(p=0.5)",
+    "Rotate(limit=15, p=0.5)",
+    "RandomBrightnessContrast(brightness=0.15, contrast=0.15, p=0.5)",
+    "RandomResizedCrop(scale=0.85-1.0, p=0.4)",
+    "GaussNoise(std=0.01-0.03, p=0.3)"
+  ],
+  "applied_to": "train only",
+  "random_seed": 42,
+  "classes": {
+    "healthy": {
+      "originals": 649,
+      "augmented_created": 1298,
+      "multiplier": 2,
+      "total_after_augmentation": 1947
+    },
+    "early_blight": {
+      "originals": 362,
+      "augmented_created": 1086,
+      "multiplier": 3,
+      "total_after_augmentation": 1448
+    },
+    "late_blight": {
+      "originals": 696,
+      "augmented_created": 1392,
+      "multiplier": 2,
+      "total_after_augmentation": 2088
+    },
+    "leaf_spot": {
+      "originals": 619,
+      "augmented_created": 1238,
+      "multiplier": 2,
+      "total_after_augmentation": 1857
+    },
+    "yellow_leaf_curl_virus": {
+      "originals": 1155,
+      "augmented_created": 2310,
+      "multiplier": 2,
+      "total_after_augmentation": 3465
+    }
+  },
+  "total_augmented_created": 7324
+}

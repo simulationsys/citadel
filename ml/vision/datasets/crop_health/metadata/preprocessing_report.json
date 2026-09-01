@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-09-01T18:22:27.599722+00:00",
+  "model_input_size": [
+    224,
+    224
+  ],
+  "normalisation": {
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ]
+  },
+  "image_counts": {
+    "train": {
+      "healthy": 649,
+      "early_blight": 362,
+      "late_blight": 696,
+      "leaf_spot": 619,
+      "yellow_leaf_curl_virus": 1155
+    },
+    "val": {
+      "healthy": 140,
+      "early_blight": 78,
+      "late_blight": 150,
+      "leaf_spot": 133,
+      "yellow_leaf_curl_virus": 248
+    },
+    "test": {
+      "healthy": 140,
+      "early_blight": 78,
+      "late_blight": 150,
+      "leaf_spot": 133,
+      "yellow_leaf_curl_virus": 248
+    }
+  }
+}
