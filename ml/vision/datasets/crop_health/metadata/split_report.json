@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-09-01T18:22:11.592276+00:00",
+  "random_seed": 42,
+  "split_ratios": {
+    "train": 0.7,
+    "val": 0.15,
+    "test": 0.15
+  },
+  "classes": {
+    "healthy": {
+      "train": 649,
+      "val": 140,
+      "test": 140,
+      "total": 929
+    },
+    "early_blight": {
+      "train": 362,
+      "val": 78,
+      "test": 78,
+      "total": 518
+    },
+    "late_blight": {
+      "train": 696,
+      "val": 150,
+      "test": 150,
+      "total": 996
+    },
+    "leaf_spot": {
+      "train": 619,
+      "val": 133,
+      "test": 133,
+      "total": 885
+    },
+    "yellow_leaf_curl_virus": {
+      "train": 1155,
+      "val": 248,
+      "test": 248,
+      "total": 1651
+    }
+  },
+  "totals": {
+    "train": 3481,
+    "val": 749,
+    "test": 749
+  }
+}

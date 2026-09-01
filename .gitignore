@@ -3,5 +3,11 @@ node_modules/
 __pycache__/
 *.py[cod]
 ml/vision/models/*.tflite
+ml/vision/datasets/crop_health/raw/
+ml/vision/datasets/crop_health/processed/
+ml/vision/datasets/crop_health/train/
+ml/vision/datasets/crop_health/val/
+ml/vision/datasets/crop_health/test/
+ml/vision/.venv/
 ml/pest-risk/models/*.tflite
 firmware/esp32-field-node/config.h

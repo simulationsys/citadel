@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-09-01T18:20:39.598734+00:00",
+  "classes": {
+    "healthy": {
+      "valid": 1591,
+      "quarantined": 0
+    },
+    "early_blight": {
+      "valid": 1000,
+      "quarantined": 0
+    },
+    "late_blight": {
+      "valid": 1909,
+      "quarantined": 0
+    },
+    "leaf_spot": {
+      "valid": 1771,
+      "quarantined": 0
+    },
+    "yellow_leaf_curl_virus": {
+      "valid": 5357,
+      "quarantined": 0
+    }
+  },
+  "total_valid": 11628,
+  "total_quarantined": 0,
+  "quarantine_reasons": {}
+}

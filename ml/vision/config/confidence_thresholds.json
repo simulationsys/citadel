@@ -1,0 +1,6 @@
+{
+  "_comment": "Confidence tier thresholds for crop-health inference. These are initial working values and MUST be recalibrated after Phase 2 evaluation on the frozen test set.",
+  "high": 0.80,
+  "low": 0.50,
+  "version": "0.1.0-uncalibrated"
+}
