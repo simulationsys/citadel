@@ -1,0 +1,20 @@
+{
+  "download_date": "2026-09-01T18:20:39.597910+00:00",
+  "source": "local:plantvillage_tmp",
+  "crop": "tomato",
+  "classes": [
+    "healthy",
+    "early_blight",
+    "late_blight",
+    "leaf_spot",
+    "yellow_leaf_curl_virus"
+  ],
+  "raw_image_counts": {
+    "healthy": 1591,
+    "early_blight": 1000,
+    "late_blight": 1909,
+    "leaf_spot": 1771,
+    "yellow_leaf_curl_virus": 5357
+  },
+  "total_raw_images": 11628
+}
