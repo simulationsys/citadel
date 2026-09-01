@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-09-01T20:04:59.793310+00:00",
+  "model_version": "v1.0.0",
+  "contract": {
+    "kind": "crop_health",
+    "crop": "tomato"
+  },
+  "input": {
+    "size": [
+      224,
+      224
+    ],
+    "channels": 3,
+    "format": "RGB",
+    "preprocessing": {
+      "type": "internal",
+      "notes": "Normalization is embedded in the model graph. Pass raw uint8 RGB [0,255] resized to input size."
+    }
+  },
+  "output": {
+    "type": "softmax",
+    "classes": [
+      "healthy",
+      "early_blight",
+      "late_blight",
+      "leaf_spot",
+      "yellow_leaf_curl_virus"
+    ]
+  }
+}

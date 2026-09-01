@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-09-01T20:03:54.472536+00:00",
+  "model_architecture": "MobileNetV2",
+  "classes": [
+    "healthy",
+    "early_blight",
+    "late_blight",
+    "leaf_spot",
+    "yellow_leaf_curl_virus"
+  ],
+  "training": {
+    "batch_size": 32,
+    "seed": 42,
+    "initial_lr": 0.001,
+    "finetune_lr": 1e-05,
+    "epochs_head_completed": 10,
+    "epochs_finetune_completed": 15,
+    "best_val_accuracy": 0.9773030877113342
+  }
+}
