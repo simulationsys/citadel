@@ -1,19 +1,64 @@
 import http from 'node:http';
-import { buildAdvisories } from './advisory.js';
+import { buildFallbackAdvisories, validateObservation, validateReading } from './advisory.js';
+import { FarmStore } from './store.js';
 
 const port = Number(process.env.PORT || 3001);
-let latest = { deviceId: 'demo-node-01', zoneId: 'zone-a', soilMoisturePct: 24, temperatureC: 34, humidityPct: 55, rainfallMm: 0, waterLevelPct: 12, capturedAt: new Date().toISOString() };
-const send = (response, status, body) => { response.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }); response.end(JSON.stringify(body)); };
+const riskServiceUrl = process.env.RISK_SERVICE_URL;
+const store = new FarmStore({ deviceId: 'demo-node-01', zoneId: 'zone-a', soilMoisturePct: 24, temperatureC: 34, humidityPct: 55, rainfallMm: 0, waterLevelPct: 12, capturedAt: new Date().toISOString() });
 
-http.createServer((request, response) => {
-  if (request.method === 'OPTIONS') return send(response, 204, {});
-  if (request.method === 'GET' && request.url === '/health') return send(response, 200, { status: 'ok', service: 'edge-api', mode: 'offline-first' });
-  if (request.method === 'GET' && request.url === '/v1/farm-state') return send(response, 200, { reading: latest, advisories: buildAdvisories(latest) });
-  if (request.method === 'POST' && request.url === '/v1/readings') {
-    let payload = '';
-    request.on('data', (chunk) => { payload += chunk; });
-    request.on('end', () => { try { latest = { ...latest, ...JSON.parse(payload), capturedAt: new Date().toISOString() }; send(response, 201, { reading: latest, advisories: buildAdvisories(latest) }); } catch { send(response, 400, { error: 'Body must be valid JSON.' }); } });
-    return;
+function send(response, status, body) {
+  response.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' });
+  response.end(status === 204 ? undefined : JSON.stringify(body));
+}
+
+function readJson(request) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    request.on('data', (chunk) => { body += chunk; if (body.length > 100_000) request.destroy(); });
+    request.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch { reject(new Error('Body must be valid JSON.')); } });
+    request.on('error', reject);
+  });
+}
+
+async function advisoriesFor(reading, observations) {
+  const fallback = buildFallbackAdvisories(reading, observations);
+  if (!riskServiceUrl) return { advisories: fallback, source: 'edge-fallback' };
+  const pests = observations.filter((item) => item.kind === 'pest').map(({ label, confidence, count }) => ({ label, confidence, count }));
+  try {
+    const result = await fetch(`${riskServiceUrl.replace(/\/$/, '')}/v1/risk/evaluate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(1200), body: JSON.stringify({ reading, pests }) });
+    if (!result.ok) throw new Error(`Risk service returned ${result.status}`);
+    const data = await result.json();
+    const cropAdvisories = fallback.filter((item) => item.type === 'crop_health');
+    return { advisories: [...data.advisories, ...cropAdvisories], source: 'pest-risk-service' };
+  } catch {
+    return { advisories: fallback, source: 'edge-fallback' };
   }
-  return send(response, 404, { error: 'Not found' });
+}
+
+async function farmState(zoneId) {
+  const reading = store.latestReading(zoneId);
+  if (!reading) return null;
+  const observations = store.zoneObservations(zoneId);
+  const result = await advisoriesFor(reading, observations);
+  return { zoneId, reading, observations, ...result, irrigationRequests: store.irrigationRequests.filter((item) => item.zoneId === zoneId).slice(-10).reverse() };
+}
+
+http.createServer(async (request, response) => {
+  if (request.method === 'OPTIONS') return send(response, 204, {});
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  const zoneId = url.searchParams.get('zoneId') ?? 'zone-a';
+  try {
+    if (request.method === 'GET' && url.pathname === '/health') return send(response, 200, { status: 'ok', service: 'edge-api', mode: 'offline-first', riskService: riskServiceUrl ? 'configured' : 'fallback' });
+    if (request.method === 'GET' && url.pathname === '/v1/zones') return send(response, 200, { zones: store.zones() });
+    if (request.method === 'GET' && url.pathname === '/v1/farm-state') { const state = await farmState(zoneId); return state ? send(response, 200, state) : send(response, 404, { error: 'Unknown zone.' }); }
+    if (request.method === 'GET' && url.pathname === '/v1/history') return send(response, 200, { zoneId, readings: store.history(zoneId, Math.min(Number(url.searchParams.get('limit') ?? 24), 100)) });
+    if (request.method === 'POST' && url.pathname === '/v1/readings') { const reading = store.addReading(validateReading(await readJson(request))); const state = await farmState(reading.zoneId); return send(response, 201, state); }
+    if (request.method === 'POST' && url.pathname === '/v1/observations') { const observation = store.addObservation(validateObservation(await readJson(request))); const state = await farmState(observation.zoneId); return send(response, 201, { observation, ...state }); }
+    if (request.method === 'POST' && url.pathname === '/v1/irrigation/requests') { const body = await readJson(request); const requestRecord = store.createIrrigationRequest(String(body.zoneId ?? zoneId), String(body.requestedBy ?? 'farmer')); return send(response, 201, { request: requestRecord, note: 'Approval is recorded only. Firmware must acknowledge any physical pump action separately.' }); }
+    const approval = url.pathname.match(/^\/v1\/irrigation\/requests\/([^/]+)\/approve$/);
+    if (request.method === 'POST' && approval) { const body = await readJson(request); const requestRecord = store.approveIrrigationRequest(approval[1], String(body.approvedBy ?? 'farmer')); return requestRecord ? send(response, 200, { request: requestRecord, note: 'Approved request is not a direct pump command.' }) : send(response, 404, { error: 'Irrigation request not found.' }); }
+    return send(response, 404, { error: 'Not found.' });
+  } catch (error) {
+    return send(response, 400, { error: error.message ?? 'Invalid request.' });
+  }
 }).listen(port, () => console.log(`Citadel edge API listening on http://localhost:${port}`));
