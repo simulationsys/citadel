@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-09-01T20:04:32.687564+00:00",
+  "model_path": "models\\crop_health_best.keras",
+  "metrics": {
+    "accuracy": 0.9572763684913218,
+    "macro_avg": {
+      "precision": 0.9445828485770539,
+      "recall": 0.9323705168628769,
+      "f1-score": 0.936358338491263,
+      "support": 749.0
+    },
+    "weighted_avg": {
+      "precision": 0.9574766011623875,
+      "recall": 0.9572763684913218,
+      "f1-score": 0.9560716229430245,
+      "support": 749.0
+    },
+    "per_class": {
+      "healthy": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 140.0
+      },
+      "early_blight": {
+        "precision": 0.890625,
+        "recall": 0.7307692307692307,
+        "f1-score": 0.8028169014084507,
+        "support": 78.0
+      },
+      "late_blight": {
+        "precision": 0.9403973509933775,
+        "recall": 0.9466666666666667,
+        "f1-score": 0.9435215946843853,
+        "support": 150.0
+      },
+      "leaf_spot": {
+        "precision": 0.8918918918918919,
+        "recall": 0.9924812030075187,
+        "f1-score": 0.9395017793594306,
+        "support": 133.0
+      },
+      "yellow_leaf_curl_virus": {
+        "precision": 1.0,
+        "recall": 0.9919354838709677,
+        "f1-score": 0.9959514170040485,
+        "support": 248.0
+      }
+    }
+  },
+  "confusion_matrix": [
+    [
+      140,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      57,
+      8,
+      13,
+      0
+    ],
+    [
+      0,
+      5,
+      142,
+      3,
+      0
+    ],
+    [
+      0,
+      1,
+      0,
+      132,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      0,
+      246
+    ]
+  ],
+  "profiling": {
+    "model_size_mb": 23.489893913269043,
+    "parameter_count": 2264389,
+    "cpu_latency_ms": 107.49429800001963,
+    "meets_size_target": false
+  }
+}
