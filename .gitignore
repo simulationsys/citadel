@@ -3,4 +3,5 @@ node_modules/
 __pycache__/
 *.py[cod]
 ml/vision/models/*.tflite
+ml/pest-risk/models/*.tflite
 firmware/esp32-field-node/config.h
