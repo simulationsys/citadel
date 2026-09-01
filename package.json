@@ -1,0 +1,7 @@
+{
+  "name": "citadel",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/*", "services/*", "packages/*"],
+  "scripts": { "dev:edge": "npm --workspace @citadel/edge-api run dev", "dev:dashboard": "npm --workspace @citadel/dashboard run dev", "check": "npm --workspaces --if-present run check" }
+}
