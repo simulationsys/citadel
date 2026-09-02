@@ -26,7 +26,13 @@ export function buildFallbackAdvisories(readings, observations = []) {
   if (readings.humidityPct >= 85 && readings.temperatureC >= 20) advisories.push({ type: 'disease_risk', severity: 'info', title: 'Humidity risk increasing', message: 'Warm, humid conditions can favour crop disease. Inspect leaves before treatment.', action: 'INSPECT_LEAVES' });
   for (const observation of observations) {
     if (observation.kind === 'pest' && observation.confidence >= 0.65) advisories.push({ type: 'pest', severity: observation.count >= 3 ? 'warning' : 'info', title: 'Pest activity detected', message: `Possible ${observation.label} activity was detected. Inspect affected plants and use targeted intervention only if confirmed.`, action: 'INSPECT_AFFECTED_PLANTS' });
-    if (observation.kind === 'crop_health' && observation.label !== 'healthy' && observation.confidence >= 0.65) advisories.push({ type: 'crop_health', severity: 'warning', title: 'Possible crop-health issue', message: `Possible ${observation.label.replaceAll('_', ' ')} detected. Inspect nearby plants before treatment.`, action: 'INSPECT_LEAVES' });
+    if (observation.kind === 'crop_health') {
+      if (observation.label === 'inconclusive') {
+        advisories.push({ type: 'crop_health', severity: 'info', title: 'Low-confidence result', message: 'Model confidence is too low. Capture a clearer close-up image before acting.', action: 'RECAPTURE_IMAGE' });
+      } else if (observation.label !== 'healthy' && observation.confidence >= 0.50) {
+        advisories.push({ type: 'crop_health', severity: 'warning', title: 'Possible crop-health issue', message: `Possible ${observation.label.replaceAll('_', ' ')} detected. Inspect nearby plants before treatment.`, action: 'INSPECT_LEAVES' });
+      }
+    }
   }
   return advisories;
 }
