@@ -4,3 +4,5 @@ __pycache__/
 *.py[cod]
 ml/vision/models/*.tflite
 firmware/esp32-field-node/config.h
+*.db
+
