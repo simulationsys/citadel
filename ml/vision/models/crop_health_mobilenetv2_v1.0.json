@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-09-01T20:04:59.793310+00:00",
+  "model_version": "v1.0.0",
+  "contract": {
+    "kind": "crop_health",
+    "crop": "tomato"
+  },
+  "input": {
+    "size": [224, 224],
+    "channels": 3,
+    "format": "RGB",
+    "preprocessing": {
+      "type": "internal",
+      "notes": "Normalization is embedded in the model graph. Pass raw uint8 RGB [0,255] resized to input size."
+    }
+  },
+  "output": {
+    "type": "softmax",
+    "classes": [
+      "healthy",
+      "early_blight",
+      "late_blight",
+      "leaf_spot",
+      "yellow_leaf_curl_virus"
+    ]
+  },
+  "confidence_policy": {
+    "high": {
+      "range": ">= 0.80",
+      "behaviour": "Normal prediction surfaced as primary finding.",
+      "calibrated_accuracy": 0.96
+    },
+    "medium": {
+      "range": "0.50 - 0.79",
+      "behaviour": "Cautious prediction with qualifying limitation note.",
+      "calibrated_accuracy": 0.52
+    },
+    "low": {
+      "range": "< 0.50",
+      "behaviour": "Label overridden to 'inconclusive'. No diagnosis generated.",
+      "calibrated_accuracy": 0.50
+    },
+    "calibration_status": "empirically_validated",
+    "calibration_date": "2026-09-02",
+    "notes": "Thresholds validated against 749-image frozen test set. 90.4% of images fall in the high-confidence bucket with 98.5% accuracy. Errors cluster in fungal disease pairs (early_blight <-> leaf_spot, early_blight <-> late_blight)."
+  },
+  "quality_gate": {
+    "blur_threshold": 30.0,
+    "dark_threshold": 40,
+    "bright_threshold": 220,
+    "min_resolution": 224,
+    "green_ratio_threshold": 0.02,
+    "calibration_date": "2026-09-02"
+  },
+  "evaluation": {
+    "test_set": "datasets/crop_health/test (749 images, frozen)",
+    "overall_accuracy": 0.9533,
+    "mean_latency_ms": 34.3,
+    "model_size_tflite_mb": 2.40,
+    "evaluation_date": "2026-09-02"
+  },
+  "known_limitations": [
+    "Single crop only (tomato).",
+    "No crop-type detection. Non-tomato leaves may be misclassified.",
+    "early_blight has lowest recall (71.8%) due to visual similarity with leaf_spot and late_blight.",
+    "18 high-confidence errors exist in the fungal disease cluster (early_blight/late_blight/leaf_spot).",
+    "Leaf suitability gate uses colour heuristic, not object detection.",
+    "Confidence thresholds are initial calibrated values; should be recalibrated with field data."
+  ]
+}

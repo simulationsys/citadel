@@ -1,0 +1,34 @@
+{
+  "experiment_id": "A",
+  "description": "Class-weighted categorical crossentropy",
+  "config": {
+    "description": "Class-weighted categorical crossentropy",
+    "loss": "weighted_cce",
+    "label_smoothing": 0.0,
+    "unfreeze_from": 100,
+    "dropout": 0.2,
+    "lr_head": 0.001,
+    "lr_finetune": 1e-05,
+    "epochs_head": 10,
+    "epochs_finetune": 15,
+    "augmented_data": false
+  },
+  "seed": 42,
+  "class_weights": {
+    "healthy": 1.1099126861838726,
+    "early_blight": 1.492403314917127,
+    "late_blight": 1.0349616858237547,
+    "leaf_spot": 1.1637049003769522,
+    "yellow_leaf_curl_virus": 0.6236652236652237
+  },
+  "training": {
+    "stage1_epochs": 10,
+    "stage2_epochs": 15,
+    "stage1_time_s": 1118.5,
+    "stage2_time_s": 2327.4,
+    "best_val_accuracy": 0.97463,
+    "best_val_loss": 0.08161
+  },
+  "checkpoint_path": "models\\v11_experiments\\exp_A\\best.keras",
+  "timestamp": "2026-09-03T06:46:26.205301+00:00"
+}
