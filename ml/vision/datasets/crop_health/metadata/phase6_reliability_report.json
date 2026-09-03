@@ -1,0 +1,118 @@
+{
+  "phase": 6,
+  "timestamp": "2026-09-02T23:38:32+0530",
+  "model_artifact": "models\\crop_health_mobilenetv2.tflite",
+  "test_set": "datasets\\crop_health\\test",
+  "total_images": 749,
+  "overall_accuracy": 0.9532710280373832,
+  "mean_latency_ms": 34.03,
+  "per_class": {
+    "healthy": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 140
+    },
+    "early_blight": {
+      "precision": 0.9032258064516129,
+      "recall": 0.717948717948718,
+      "f1": 0.8,
+      "support": 78
+    },
+    "late_blight": {
+      "precision": 0.94,
+      "recall": 0.94,
+      "f1": 0.94,
+      "support": 150
+    },
+    "leaf_spot": {
+      "precision": 0.8733333333333333,
+      "recall": 0.9849624060150376,
+      "f1": 0.9257950530035335,
+      "support": 133
+    },
+    "yellow_leaf_curl_virus": {
+      "precision": 0.9959514170040485,
+      "recall": 0.9919354838709677,
+      "f1": 0.9939393939393938,
+      "support": 248
+    }
+  },
+  "confusion_matrix": [
+    [
+      140,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      56,
+      7,
+      14,
+      1
+    ],
+    [
+      0,
+      4,
+      141,
+      5,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      131,
+      0
+    ],
+    [
+      0,
+      1,
+      1,
+      0,
+      246
+    ]
+  ],
+  "confidence": {
+    "correct": {
+      "mean": 0.9852,
+      "median": 1.0,
+      "min": 0.4466
+    },
+    "incorrect": {
+      "mean": 0.8032,
+      "median": 0.8529,
+      "max": 0.9999
+    },
+    "high_confidence_errors": 18
+  },
+  "confidence_policy": {
+    "high": {
+      "range": ">= 0.80",
+      "behaviour": "Normal prediction surfaced as primary finding"
+    },
+    "medium": {
+      "range": "0.50 - 0.79",
+      "behaviour": "Cautious prediction with qualifying note"
+    },
+    "low": {
+      "range": "< 0.50",
+      "behaviour": "Label overridden to 'inconclusive'; no diagnosis"
+    },
+    "calibration_status": "empirically_validated",
+    "notes": "Thresholds validated against frozen test set. Mean correct confidence is well above 0.80. Errors cluster around similar fungal diseases (early_blight <-> leaf_spot)."
+  },
+  "misclassification_pairs": {
+    "early_blight -> leaf_spot": 14,
+    "early_blight -> late_blight": 7,
+    "late_blight -> leaf_spot": 5,
+    "late_blight -> early_blight": 4,
+    "early_blight -> yellow_leaf_curl_virus": 1,
+    "leaf_spot -> late_blight": 1,
+    "leaf_spot -> early_blight": 1,
+    "yellow_leaf_curl_virus -> late_blight": 1,
+    "yellow_leaf_curl_virus -> early_blight": 1
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "deviceId": "demo-node-01",
+  "zoneId": "zone-a",
+  "soilMoisturePct": 22,
+  "temperatureC": 39,
+  "humidityPct": 34,
+  "rainfallMm": 0,
+  "waterLevelPct": 8
+}

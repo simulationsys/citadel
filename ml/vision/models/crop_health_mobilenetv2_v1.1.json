@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-09-03T08:05:40.384853+00:00",
+  "model_version": "v1.1.0",
+  "source_experiment": "C",
+  "contract": {
+    "kind": "crop_health",
+    "crop": "tomato"
+  },
+  "input": {
+    "size": [
+      224,
+      224
+    ],
+    "channels": 3,
+    "format": "RGB",
+    "preprocessing": {
+      "type": "internal",
+      "notes": "Normalization embedded in model graph. Pass raw uint8 RGB [0,255]."
+    }
+  },
+  "output": {
+    "type": "softmax",
+    "classes": [
+      "healthy",
+      "early_blight",
+      "late_blight",
+      "leaf_spot",
+      "yellow_leaf_curl_virus"
+    ]
+  },
+  "model_size_mb": 2.4
+}

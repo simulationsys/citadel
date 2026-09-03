@@ -1,0 +1,427 @@
+{
+  "timestamp": "2026-09-01T18:24:41.602266+00:00",
+  "summary": {
+    "total_checks": 74,
+    "passed": 73,
+    "critical_failures": 0,
+    "warnings": 1
+  },
+  "split_counts_raw": {
+    "train": {
+      "healthy": 649,
+      "early_blight": 362,
+      "late_blight": 696,
+      "leaf_spot": 619,
+      "yellow_leaf_curl_virus": 1155
+    },
+    "val": {
+      "healthy": 140,
+      "early_blight": 78,
+      "late_blight": 150,
+      "leaf_spot": 133,
+      "yellow_leaf_curl_virus": 248
+    },
+    "test": {
+      "healthy": 140,
+      "early_blight": 78,
+      "late_blight": 150,
+      "leaf_spot": 133,
+      "yellow_leaf_curl_virus": 248
+    }
+  },
+  "split_counts_processed": {
+    "train": {
+      "healthy": 1947,
+      "early_blight": 1448,
+      "late_blight": 2088,
+      "leaf_spot": 1857,
+      "yellow_leaf_curl_virus": 3465
+    },
+    "val": {
+      "healthy": 140,
+      "early_blight": 78,
+      "late_blight": 150,
+      "leaf_spot": 133,
+      "yellow_leaf_curl_virus": 248
+    },
+    "test": {
+      "healthy": 140,
+      "early_blight": 78,
+      "late_blight": 150,
+      "leaf_spot": 133,
+      "yellow_leaf_curl_virus": 248
+    }
+  },
+  "checks": [
+    {
+      "name": "train/ exists",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "val/ exists",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "test/ exists",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "train total > 0",
+      "status": "PASS",
+      "detail": "3481 images"
+    },
+    {
+      "name": "train/healthy > 0",
+      "status": "PASS",
+      "detail": "649 images"
+    },
+    {
+      "name": "train/early_blight > 0",
+      "status": "PASS",
+      "detail": "362 images"
+    },
+    {
+      "name": "train/late_blight > 0",
+      "status": "PASS",
+      "detail": "696 images"
+    },
+    {
+      "name": "train/leaf_spot > 0",
+      "status": "PASS",
+      "detail": "619 images"
+    },
+    {
+      "name": "train/yellow_leaf_curl_virus > 0",
+      "status": "PASS",
+      "detail": "1155 images"
+    },
+    {
+      "name": "val total > 0",
+      "status": "PASS",
+      "detail": "749 images"
+    },
+    {
+      "name": "val/healthy > 0",
+      "status": "PASS",
+      "detail": "140 images"
+    },
+    {
+      "name": "val/early_blight > 0",
+      "status": "PASS",
+      "detail": "78 images"
+    },
+    {
+      "name": "val/late_blight > 0",
+      "status": "PASS",
+      "detail": "150 images"
+    },
+    {
+      "name": "val/leaf_spot > 0",
+      "status": "PASS",
+      "detail": "133 images"
+    },
+    {
+      "name": "val/yellow_leaf_curl_virus > 0",
+      "status": "PASS",
+      "detail": "248 images"
+    },
+    {
+      "name": "test total > 0",
+      "status": "PASS",
+      "detail": "749 images"
+    },
+    {
+      "name": "test/healthy > 0",
+      "status": "PASS",
+      "detail": "140 images"
+    },
+    {
+      "name": "test/early_blight > 0",
+      "status": "PASS",
+      "detail": "78 images"
+    },
+    {
+      "name": "test/late_blight > 0",
+      "status": "PASS",
+      "detail": "150 images"
+    },
+    {
+      "name": "test/leaf_spot > 0",
+      "status": "PASS",
+      "detail": "133 images"
+    },
+    {
+      "name": "test/yellow_leaf_curl_virus > 0",
+      "status": "PASS",
+      "detail": "248 images"
+    },
+    {
+      "name": "processed/train total > 0",
+      "status": "PASS",
+      "detail": "10805 images"
+    },
+    {
+      "name": "processed/val total > 0",
+      "status": "PASS",
+      "detail": "749 images"
+    },
+    {
+      "name": "processed/test total > 0",
+      "status": "PASS",
+      "detail": "749 images"
+    },
+    {
+      "name": "healthy: train_AND_val = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "healthy: train_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "healthy: val_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "early_blight: train_AND_val = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "early_blight: train_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "early_blight: val_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "late_blight: train_AND_val = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "late_blight: train_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "late_blight: val_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "leaf_spot: train_AND_val = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "leaf_spot: train_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "leaf_spot: val_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "yellow_leaf_curl_virus: train_AND_val = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "yellow_leaf_curl_virus: train_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "yellow_leaf_curl_virus: val_AND_test = empty",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/train/healthy dims=224x224",
+      "status": "PASS",
+      "detail": "1947 images"
+    },
+    {
+      "name": "processed/train/early_blight dims=224x224",
+      "status": "PASS",
+      "detail": "1448 images"
+    },
+    {
+      "name": "processed/train/late_blight dims=224x224",
+      "status": "PASS",
+      "detail": "2088 images"
+    },
+    {
+      "name": "processed/train/leaf_spot dims=224x224",
+      "status": "PASS",
+      "detail": "1857 images"
+    },
+    {
+      "name": "processed/train/yellow_leaf_curl_virus dims=224x224",
+      "status": "PASS",
+      "detail": "3465 images"
+    },
+    {
+      "name": "processed/val/healthy dims=224x224",
+      "status": "PASS",
+      "detail": "140 images"
+    },
+    {
+      "name": "processed/val/early_blight dims=224x224",
+      "status": "PASS",
+      "detail": "78 images"
+    },
+    {
+      "name": "processed/val/late_blight dims=224x224",
+      "status": "PASS",
+      "detail": "150 images"
+    },
+    {
+      "name": "processed/val/leaf_spot dims=224x224",
+      "status": "PASS",
+      "detail": "133 images"
+    },
+    {
+      "name": "processed/val/yellow_leaf_curl_virus dims=224x224",
+      "status": "PASS",
+      "detail": "248 images"
+    },
+    {
+      "name": "processed/test/healthy dims=224x224",
+      "status": "PASS",
+      "detail": "140 images"
+    },
+    {
+      "name": "processed/test/early_blight dims=224x224",
+      "status": "PASS",
+      "detail": "78 images"
+    },
+    {
+      "name": "processed/test/late_blight dims=224x224",
+      "status": "PASS",
+      "detail": "150 images"
+    },
+    {
+      "name": "processed/test/leaf_spot dims=224x224",
+      "status": "PASS",
+      "detail": "133 images"
+    },
+    {
+      "name": "processed/test/yellow_leaf_curl_virus dims=224x224",
+      "status": "PASS",
+      "detail": "248 images"
+    },
+    {
+      "name": "processed/val/healthy: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/val/early_blight: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/val/late_blight: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/val/leaf_spot: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/val/yellow_leaf_curl_virus: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/test/healthy: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/test/early_blight: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/test/late_blight: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/test/leaf_spot: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "processed/test/yellow_leaf_curl_virus: no augmented files",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "test/healthy matches frozen manifest",
+      "status": "PASS",
+      "detail": "expected=140, actual=140"
+    },
+    {
+      "name": "test/early_blight matches frozen manifest",
+      "status": "PASS",
+      "detail": "expected=78, actual=78"
+    },
+    {
+      "name": "test/late_blight matches frozen manifest",
+      "status": "PASS",
+      "detail": "expected=150, actual=150"
+    },
+    {
+      "name": "test/leaf_spot matches frozen manifest",
+      "status": "PASS",
+      "detail": "expected=133, actual=133"
+    },
+    {
+      "name": "test/yellow_leaf_curl_virus matches frozen manifest",
+      "status": "PASS",
+      "detail": "expected=248, actual=248"
+    },
+    {
+      "name": "train/healthy balance",
+      "status": "PASS",
+      "detail": "649 images (7% from mean=696)"
+    },
+    {
+      "name": "train/early_blight balance",
+      "status": "PASS",
+      "detail": "362 images (48% from mean=696)"
+    },
+    {
+      "name": "train/late_blight balance",
+      "status": "PASS",
+      "detail": "696 images (0% from mean=696)"
+    },
+    {
+      "name": "train/leaf_spot balance",
+      "status": "PASS",
+      "detail": "619 images (11% from mean=696)"
+    },
+    {
+      "name": "train/yellow_leaf_curl_virus balance",
+      "status": "WARN",
+      "detail": "1155 images (66% from mean=696)"
+    }
+  ]
+}
