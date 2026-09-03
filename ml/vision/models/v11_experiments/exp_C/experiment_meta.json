@@ -1,0 +1,34 @@
+{
+  "experiment_id": "C",
+  "description": "Focal loss (gamma=2.0) with class weights",
+  "config": {
+    "description": "Focal loss (gamma=2.0) with class weights",
+    "loss": "focal",
+    "label_smoothing": 0.0,
+    "unfreeze_from": 100,
+    "dropout": 0.2,
+    "lr_head": 0.001,
+    "lr_finetune": 1e-05,
+    "epochs_head": 10,
+    "epochs_finetune": 15,
+    "augmented_data": false
+  },
+  "seed": 42,
+  "class_weights": {
+    "healthy": 1.1099126861838726,
+    "early_blight": 1.492403314917127,
+    "late_blight": 1.0349616858237547,
+    "leaf_spot": 1.1637049003769522,
+    "yellow_leaf_curl_virus": 0.6236652236652237
+  },
+  "training": {
+    "stage1_epochs": 5,
+    "stage2_epochs": 15,
+    "stage1_time_s": 493.0,
+    "stage2_time_s": 3025.2,
+    "best_val_accuracy": 0.97063,
+    "best_val_loss": 0.04386
+  },
+  "checkpoint_path": "models\\v11_experiments\\exp_C\\best.keras",
+  "timestamp": "2026-09-03T08:03:03.186004+00:00"
+}

@@ -141,7 +141,7 @@ def main():
 
     # --- Load TFLite model ---
     model_path = os.path.join(os.path.dirname(__file__), "..", "models",
-                              "crop_health_mobilenetv2.tflite")
+                              "crop_health_mobilenetv2_v1.1.tflite")
     model_path = os.path.abspath(model_path)
 
     if not os.path.exists(model_path):
