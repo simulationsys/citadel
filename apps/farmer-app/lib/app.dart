@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/theme/app_colors.dart';
-import 'features/home/home_screen.dart';
 import 'features/advisory_detail/advisory_detail_screen.dart';
 import 'features/scan/scan_screen.dart';
 import 'features/history/history_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'widgets/main_scaffold.dart';
 
 class CitadelApp extends StatelessWidget {
   const CitadelApp({super.key});
@@ -57,7 +57,7 @@ class CitadelApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (_) => const HomeScreen(),
+        '/': (_) => const MainScaffold(),
         '/advisory-detail': (_) => const AdvisoryDetailScreen(),
         '/scan': (_) => const ScanScreen(),
         '/history': (_) => const HistoryScreen(),
