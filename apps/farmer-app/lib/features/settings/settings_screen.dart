@@ -1,12 +1,15 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
+import '../../core/config/edge_config.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
+import '../../data/repositories/http_farm_state_repository.dart';
 
 /// Settings screen — language toggle, edge API URL, connection test.
+///
+/// The Edge API URL is persisted via [EdgeConfig] so a physical phone can
+/// point at the laptop on the same Wi-Fi, e.g. `http://192.168.1.10:3001`.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -15,16 +18,29 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final TextEditingController _urlController = TextEditingController(
-    text: AppConstants.defaultEdgeApiUrl,
-  );
+  late TextEditingController _urlController;
+  late TextEditingController _zoneController;
   String _language = 'English';
   String? _connectionStatus;
   bool _isTesting = false;
+  bool _isSaving = false;
+  bool _init = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_init) {
+      final edge = context.read<EdgeConfig>();
+      _urlController = TextEditingController(text: edge.baseUrl);
+      _zoneController = TextEditingController(text: edge.zoneId);
+      _init = true;
+    }
+  }
 
   @override
   void dispose() {
     _urlController.dispose();
+    _zoneController.dispose();
     super.dispose();
   }
 
@@ -63,13 +79,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
 
           // Edge API URL.
-          const _SectionLabel(text: 'Edge API Connection'),
+          const _SectionLabel(text: 'Edge API Connection (phone → farm)'),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const Text(
+                    'Phone and laptop must be on the same Wi-Fi. Use the laptop IPv4, e.g. http://192.168.1.10:3001',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _urlController,
                     decoration: InputDecoration(
@@ -82,19 +103,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: _isTesting ? null : _testConnection,
-                    icon: _isTesting
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.wifi_find),
-                    label: Text(_isTesting ? 'Testing…' : 'Test Connection'),
+                  TextField(
+                    controller: _zoneController,
+                    decoration: InputDecoration(
+                      labelText: 'Zone ID',
+                      hintText: 'zone-a',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      prefixIcon: const Icon(Icons.grid_view),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isSaving ? null : _save,
+                          icon: const Icon(Icons.save_outlined),
+                          label: Text(_isSaving ? 'Saving…' : 'Save'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _isTesting ? null : _testConnection,
+                          icon: _isTesting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.wifi_find),
+                          label: Text(_isTesting ? 'Testing…' : 'Test Connection'),
+                        ),
+                      ),
+                    ],
                   ),
                   if (_connectionStatus != null) ...[
                     const SizedBox(height: 12),
@@ -113,8 +160,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
+                children: [
+                  const Text(
                     'Citadel Farmer App',
                     style: TextStyle(
                       fontSize: 18,
@@ -122,17 +169,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 4),
-                  Text(
+                  const SizedBox(height: 4),
+                  const Text(
                     'v0.1.0 · Phase 1 MVP',
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     'Offline-first smart farming assistant for Indian farms. '
+                    'Default edge URL: ${AppConstants.defaultEdgeApiUrl}. '
                     'Provides real-time advisories for irrigation, crop health, '
                     'and environmental risk.',
-                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.4),
+                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.4),
                   ),
                 ],
               ),
@@ -143,6 +191,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _save() async {
+    setState(() => _isSaving = true);
+    try {
+      final edge = context.read<EdgeConfig>();
+      await edge.setBaseUrl(_urlController.text);
+      await edge.setZoneId(_zoneController.text.isEmpty ? 'zone-a' : _zoneController.text);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Saved — ${edge.normalizedBaseUrl} • ${edge.zoneId}')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   Future<void> _testConnection() async {
     setState(() {
       _isTesting = true;
@@ -150,23 +214,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
 
     try {
-      final url = Uri.parse('${_urlController.text}/health');
-      final response = await http.get(url).timeout(const Duration(seconds: 5));
-
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        setState(() {
-          _connectionStatus = '✅ Connected — ${body['service']} (${body['mode']})';
-        });
-      } else {
-        setState(() {
-          _connectionStatus = '❌ Responded with status ${response.statusCode}';
-        });
-      }
+      final repo = HttpFarmStateRepository(
+        baseUrl: _urlController.text,
+        zoneId: _zoneController.text.isEmpty ? 'zone-a' : _zoneController.text,
+      );
+      final msg = await repo.testConnection();
+      setState(() => _connectionStatus = '✅ $msg');
     } catch (e) {
-      setState(() {
-        _connectionStatus = '❌ Could not reach server: $e';
-      });
+      setState(() => _connectionStatus = '❌ Could not reach server: $e');
     } finally {
       setState(() => _isTesting = false);
     }
