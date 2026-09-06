@@ -21,7 +21,7 @@ abstract class FarmStateRepository {
 
 /// Provider that wraps the repository and exposes state to the widget tree.
 class FarmStateProvider extends ChangeNotifier {
-  final FarmStateRepository _repository;
+  FarmStateRepository _repository;
 
   FarmState? _farmState;
   CropHealthResult? _lastScanResult;
@@ -30,6 +30,11 @@ class FarmStateProvider extends ChangeNotifier {
   DateTime? _lastFetchTime;
 
   FarmStateProvider(this._repository);
+
+  /// Swap the backing repository (e.g. when the edge URL changes).
+  void updateRepository(FarmStateRepository repository) {
+    _repository = repository;
+  }
 
   // ── Getters ──────────────────────────────────────────────────────────
 

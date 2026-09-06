@@ -113,4 +113,18 @@ http.createServer(async (request, response) => {
   } catch (error) {
     return send(response, 400, { error: error.message ?? 'Invalid request.' });
   }
-}).listen(port, () => console.log(`Citadel edge API listening on http://localhost:${port}`));
+}).listen(port, '0.0.0.0', () => {
+  console.log(`Citadel edge API listening on http://localhost:${port}`);
+  // Print LAN URLs so a physical phone on the same Wi-Fi can connect.
+  // Phone → Settings → Edge API URL → e.g. http://<lan-ip>:3001
+  try {
+    const nets = os.networkInterfaces();
+    for (const addrs of Object.values(nets)) {
+      for (const a of addrs ?? []) {
+        if (a.family === 'IPv4' && !a.internal) {
+          console.log(`Citadel edge API on LAN: http://${a.address}:${port} (phone uses this)`);
+        }
+      }
+    }
+  } catch { /* best-effort */ }
+});
