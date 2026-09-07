@@ -2,15 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app.dart';
+import 'core/config/edge_config.dart';
+import 'core/config/app_settings_provider.dart';
 import 'data/repositories/farm_state_repository.dart';
-import 'data/repositories/mock_farm_state_repository.dart';
+import 'data/repositories/http_farm_state_repository.dart';
+import 'data/repositories/hybrid_farm_state_repository.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final edge = EdgeConfig();
+  await edge.load();
+  final appSettings = AppSettingsProvider();
+  await appSettings.init();
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => FarmStateProvider(MockFarmStateRepository()),
+        ChangeNotifierProvider.value(value: appSettings),
+        ChangeNotifierProvider.value(value: edge),
+        ChangeNotifierProxyProvider<EdgeConfig, FarmStateProvider>(
+          create: (_) => FarmStateProvider(
+            HybridFarmStateRepository(
+              live: HttpFarmStateRepository(
+                baseUrl: edge.baseUrl,
+                zoneId: edge.zoneId,
+              ),
+            ),
+          ),
+          update: (_, edge, provider) {
+            provider!.updateRepository(
+              HybridFarmStateRepository(
+                live: HttpFarmStateRepository(
+                  baseUrl: edge.baseUrl,
+                  zoneId: edge.zoneId,
+                ),
+              ),
+            );
+            return provider;
+          },
         ),
       ],
       child: const CitadelApp(),

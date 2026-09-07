@@ -1,290 +1,461 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:provider/provider.dart';
 
-class HistoryScreen extends StatelessWidget {
+import '../../core/config/app_settings_provider.dart';
+import '../../core/config/app_strings.dart';
+import '../../core/theme/app_colors.dart';
+import '../../widgets/app_bottom_nav.dart';
+
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
+
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  String _selectedFilter = 'All';
+
+  void _showMicDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.mic, color: AppColors.primaryGreen, size: 48),
+            const SizedBox(height: 16),
+            const Text(
+              'Voice Assistant Active',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Listening to your farm question… Ask about weather, advisory, or irrigation.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDosageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.bug_report, color: AppColors.severityCritical),
+            SizedBox(width: 8),
+            Text('Whitefly Dosage Plan'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text('Recommended Organic Treatment:', style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            Text('• Neem Oil (10,000 PPM): 5 ml per Liter water'),
+            Text('• Spray Schedule: Early morning or post 5:00 PM'),
+            Text('• Coverage: Underside of leaves in North Plot'),
+            SizedBox(height: 12),
+            Text('Status: 100L batch ready for field application.', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w600)),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Dismiss')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Dosage applied & logged to farm register!')),
+              );
+            },
+            child: const Text('Apply Dosage'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSensorLogDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.water_drop, color: AppColors.primaryGreen),
+            SizedBox(width: 8),
+            Text('Plot A Sensor Log'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text('Soil Moisture Telemetry (Last 24h):', style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            Text('• 06:15 PM Yesterday: 42% (Low Moisture Alert)'),
+            Text('• 06:30 PM Yesterday: Drip Irrigation Started (45m)'),
+            Text('• 07:15 PM Yesterday: Drip Cycle Completed'),
+            Text('• Current Level: 68% (Optimal Root Zone)'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+        ],
+      ),
+    );
+  }
+
+  void _showWeatherRadarDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.cloudy_snowing, color: AppColors.primaryGreen),
+            SizedBox(width: 8),
+            Text('Weather Radar'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text('Rohtak Zone Radar Overview:', style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            Text('• Precipitation: 40mm expected in next 3 days'),
+            Text('• Wind: 14 km/h North-East'),
+            Text('• Recommendation: Hold off chemical spray to prevent wash-off'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  void _showNutrientLogDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: const [
+            Icon(Icons.eco, color: AppColors.primaryGreen),
+            SizedBox(width: 8),
+            Text('Nutrient Batch #N-204'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            Text('Application Summary:', style: TextStyle(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8),
+            Text('• Applied: Neem-coated Urea (45 kg/ha)'),
+            Text('• Area Covered: 4.2 hectares'),
+            Text('• Satellite NDVI Response: +8% vigor increase'),
+          ],
+        ),
+        actions: [
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: _buildTopBar(context),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  const SizedBox(height: 16),
-                  _buildHeader(),
-                  const SizedBox(height: 20),
-                  _buildSummaryCards(),
-                  const SizedBox(height: 24),
-                  _buildFilterChips(),
-                  const SizedBox(height: 24),
-                  _buildWhiteflyCard(),
-                  const SizedBox(height: 16),
-                  _buildIrrigationCard(),
-                  const SizedBox(height: 16),
-                  _buildWeatherCard(),
-                  const SizedBox(height: 16),
-                  _buildNutrientCard(),
-                  const SizedBox(height: 24),
-                  const Center(
-                    child: Text(
-                      'All past advisories up to date',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                  ),
-                  const SizedBox(height: 100), // padding for bottom nav
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+      appBar: _buildAppBar(context),
+      body: _buildBody(context),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: AppColors.primaryGreen,
-            borderRadius: BorderRadius.circular(6),
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: AppColors.background,
+      elevation: 0,
+      titleSpacing: 16,
+      automaticallyImplyLeading: false,
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.agriculture, color: Colors.white, size: 24),
           ),
-          child: const Icon(Icons.agriculture, color: Colors.white, size: 16),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Citadel Farm',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.textPrimary),
-              ),
-              Row(
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryGreen,
-                      shape: BoxShape.circle,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Citadel Farm',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Row(
+                  children: [
+                    Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.primaryGreen, shape: BoxShape.circle)),
+                    const SizedBox(width: 4),
+                    const Expanded(
+                      child: Text(
+                        'Online • Synced',
+                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Online • Synced',
-                    style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
+      ),
+      actions: [
         Container(
-          width: 32,
-          height: 32,
+          margin: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: Colors.white,
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2)),
+            ],
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.mic, color: AppColors.primaryGreen, size: 20),
+            onPressed: () => _showMicDialog(context),
+          ),
+        ),
+        InkWell(
+          onTap: () => Navigator.pushNamed(context, '/profile'),
+          child: Container(
+            margin: const EdgeInsets.only(right: 16, left: 12),
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
+            ),
+            alignment: Alignment.center,
+            child: const Text('img', style: TextStyle(fontSize: 10, color: Colors.black54)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final settings = context.watch<AppSettingsProvider>();
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      children: [
+        // Title and History icon
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.translate('Alerts & Advisory History', settings.isHindi),
+                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      AppStrings.translate('Farm decisions and action log', settings.isHindi),
+                      style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Log refreshed.')),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(color: Color(0xFFE8F0FE), shape: BoxShape.circle),
+                  child: const Icon(Icons.history, color: AppColors.primaryGreen, size: 20),
+                ),
               ),
             ],
           ),
-          child: const Icon(Icons.mic_none, color: AppColors.primaryGreen, size: 18),
         ),
-        const SizedBox(width: 8),
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade300,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Center(
-            child: Text('img', style: TextStyle(color: Colors.grey, fontSize: 10)),
+        const SizedBox(height: 24),
+
+        // Summary Chips
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => _selectedFilter = 'High Severity'),
+                  child: _buildSummaryChip(
+                    count: '3',
+                    label: AppStrings.translate('Active Alerts', settings.isHindi),
+                    color: AppColors.severityCritical,
+                    bgColor: AppColors.severityCriticalBg,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => _selectedFilter = 'All'),
+                  child: _buildSummaryChip(
+                    count: '14',
+                    label: AppStrings.translate('Resolved', settings.isHindi),
+                    color: AppColors.primaryGreen,
+                    bgColor: AppColors.cardGreenBg,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: InkWell(
+                  onTap: () => setState(() => _selectedFilter = 'All'),
+                  child: _buildSummaryChip(
+                    icon: Icons.verified_user_outlined,
+                    label: AppStrings.translate('Protected', settings.isHindi),
+                    color: AppColors.textPrimary,
+                    bgColor: const Color(0xFFE8F0FE),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
+        const SizedBox(height: 24),
+
+        // Filter chips
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              _buildFilterChip(AppStrings.translate('All', settings.isHindi), Icons.done_all, AppColors.primaryGreen, Colors.white, _selectedFilter == 'All'),
+              const SizedBox(width: 8),
+              _buildFilterChip(AppStrings.translate('High Severity', settings.isHindi), Icons.warning_amber_rounded, AppColors.severityCritical, AppColors.textPrimary, _selectedFilter == 'High Severity'),
+              const SizedBox(width: 8),
+              _buildFilterChip(AppStrings.translate('Irrigation', settings.isHindi), Icons.water_drop_outlined, Colors.blue, AppColors.textPrimary, _selectedFilter == 'Irrigation'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // List of advisories according to filter
+        if (_selectedFilter == 'All' || _selectedFilter == 'High Severity') ...[
+          _buildPestAlertCard(context, settings),
+          const SizedBox(height: 16),
+        ],
+        if (_selectedFilter == 'All' || _selectedFilter == 'Irrigation') ...[
+          _buildIrrigationAlertCard(context),
+          const SizedBox(height: 16),
+        ],
+        if (_selectedFilter == 'All') ...[
+          _buildWeatherAlertCard(context),
+          const SizedBox(height: 16),
+          _buildNutrientAlertCard(context),
+          const SizedBox(height: 32),
+        ],
+        const Center(child: Text('All past advisories up to date', style: TextStyle(color: AppColors.textSecondary, fontSize: 12))),
+        const SizedBox(height: 48),
       ],
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Alerts & Advisory History',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Farm decisions and action log',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.cardPurpleLight,
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.history, color: AppColors.textPrimary, size: 20),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCards() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: AppColors.severityCriticalBg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                Text('3', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.severityCritical)),
-                const SizedBox(height: 4),
-                Text('Active Alerts', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.severityCritical)),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF69F0AE),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                const Text('14', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primaryGreenDark)),
-                const SizedBox(height: 4),
-                const Text('Resolved', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primaryGreenDark)),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: AppColors.cardPurpleLight,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: [
-                const Icon(Icons.verified_user_outlined, color: AppColors.textSecondary, size: 22),
-                const SizedBox(height: 4),
-                const Text('Protected', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilterChips() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
+  Widget _buildSummaryChip({String? count, IconData? icon, required String label, required Color color, required Color bgColor}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12)),
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.primaryGreen,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.check, color: Colors.white, size: 14),
-                SizedBox(width: 6),
-                Text('All', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.warning_amber_rounded, color: AppColors.severityCritical, size: 14),
-                const SizedBox(width: 6),
-                const Text('High Severity', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.water_drop_outlined, color: AppColors.primaryGreen, size: 14),
-                const SizedBox(width: 6),
-                const Text('Irrigation', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-              ],
-            ),
-          ),
+          if (count != null)
+            Text(count, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color))
+          else if (icon != null)
+            Icon(icon, color: AppColors.primaryGreen, size: 22),
+          const SizedBox(height: 4),
+          Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
         ],
       ),
     );
   }
 
-  Widget _buildWhiteflyCard() {
+  Widget _buildFilterChip(String label, IconData icon, Color iconColor, Color textColor, bool isSelected) {
+    return InkWell(
+      onTap: () => setState(() => _selectedFilter = label),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryGreen : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? AppColors.primaryGreen : Colors.grey[300]!),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: isSelected ? Colors.white : iconColor),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isSelected ? Colors.white : textColor)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- Specialized Cards ---
+
+  Widget _buildPestAlertCard(BuildContext context, AppSettingsProvider settings) {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(color: AppColors.severityCriticalBg, borderRadius: BorderRadius.circular(12)),
-                child: Icon(Icons.bug_report, color: AppColors.severityCritical, size: 24),
+                child: const Icon(Icons.bug_report, color: AppColors.severityCritical, size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -294,40 +465,61 @@ class HistoryScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(color: AppColors.severityCritical, borderRadius: BorderRadius.circular(8)),
-                          child: const Text('High Severity', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(color: AppColors.severityCritical, borderRadius: BorderRadius.circular(4)),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 10),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    AppStrings.translate('High Severity', settings.isHindi),
+                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        const Text('Today 8:30 AM', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        const SizedBox(width: 8),
+                        Text(AppStrings.translate('Today 8:30 AM', settings.isHindi), style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      AppStrings.translate('Whitefly Outbreak (North Plot)', settings.isHindi),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 4),
-                    const Text('Whitefly Outbreak (North Pl...', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-                    const SizedBox(height: 2),
-                    Text('Action Pending', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.severityCritical)),
+                    Text(AppStrings.translate('Action Pending', settings.isHindi), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.severityCritical)),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryGreen,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 44),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              elevation: 0,
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('View Dosage', style: TextStyle(fontWeight: FontWeight.w700)),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward, size: 16),
-              ],
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _showDosageDialog(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGreenDark,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(AppStrings.translate('View Dosage', settings.isHindi), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward, size: 16),
+                ],
+              ),
             ),
           ),
         ],
@@ -335,15 +527,14 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildIrrigationCard() {
+  Widget _buildIrrigationAlertCard(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,9 +543,9 @@ class HistoryScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFF69F0AE), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.water_drop_outlined, color: AppColors.textPrimary, size: 24),
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(color: Color(0xFF5EE085), shape: BoxShape.circle),
+                child: const Icon(Icons.water_drop, color: AppColors.primaryGreenDark, size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -364,29 +555,51 @@ class HistoryScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(color: AppColors.cardPurpleLight, borderRadius: BorderRadius.circular(8)),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.water_drop, size: 10, color: AppColors.primaryGreen),
-                              SizedBox(width: 4),
-                              Text('Irrigation\nRequired', style: TextStyle(color: AppColors.primaryGreen, fontSize: 9, fontWeight: FontWeight.w800, height: 1.1)),
-                            ],
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(color: const Color(0xFFE8F0FE), borderRadius: BorderRadius.circular(12)),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: const [
+                                Icon(Icons.water_drop_outlined, color: AppColors.primaryGreen, size: 12),
+                                SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    'Irrigation Required',
+                                    style: TextStyle(color: AppColors.primaryGreen, fontSize: 10, fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                        const Text('Yesterday 6:15 PM', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Yesterday 6:15 PM',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text('Low Soil Moisture (Plot A)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Low Soil Moisture (Plot A)',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 4),
-                    const Row(
-                      children: [
-                        Icon(Icons.check_circle_outline, size: 14, color: AppColors.primaryGreen),
+                    Row(
+                      children: const [
+                        Icon(Icons.check_circle_outline, color: AppColors.primaryGreen, size: 16),
                         SizedBox(width: 4),
-                        Text('Approved & Completed (45m\ndrip)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryGreen)),
+                        Expanded(
+                          child: Text(
+                            'Approved & Completed (45m drip)',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -394,16 +607,29 @@ class HistoryScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Plot moisture restored to 68%\noptimal', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                Text('Sensor\nLog', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primaryGreen, height: 1.2)),
-              ],
+          const SizedBox(height: 16),
+          InkWell(
+            onTap: () => _showSensorLogDialog(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(color: const Color(0xFFF4F6FF), borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  Expanded(
+                    child: Text(
+                      'Plot moisture restored to 68%\noptimal',
+                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Sensor\nLog',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -411,15 +637,14 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildWeatherCard() {
+  Widget _buildWeatherAlertCard(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,9 +653,9 @@ class HistoryScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppColors.cardPurpleLight, borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.cloud_queue, color: AppColors.textPrimary, size: 24),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: const Color(0xFFE8F0FE), borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.cloudy_snowing, color: AppColors.textPrimary, size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -441,28 +666,34 @@ class HistoryScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(color: AppColors.severityWarningBg, borderRadius: BorderRadius.circular(8)),
-                          child: const Row(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: AppColors.severityWarningBg, borderRadius: BorderRadius.circular(12)),
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.cloud, size: 10, color: AppColors.severityWarning),
+                            children: const [
+                              Icon(Icons.cloud, color: AppColors.severityWarning, size: 12),
                               SizedBox(width: 4),
-                              Text('Weather Alert', style: TextStyle(color: AppColors.severityWarning, fontSize: 9, fontWeight: FontWeight.w800)),
+                              Text('Weather Alert', style: TextStyle(color: AppColors.severityWarning, fontSize: 10, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
-                        const Text('3 days ago', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        const Text('3 days ago', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text('Heavy Rain Forecast (40mm)', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                    const SizedBox(height: 6),
+                    const Text('Heavy Rain Forecast (40mm)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                     const SizedBox(height: 4),
-                    const Row(
-                      children: [
-                        Icon(Icons.savings_outlined, size: 14, color: AppColors.soilMoistureBrown),
+                    Row(
+                      children: const [
+                        Icon(Icons.savings_outlined, color: AppColors.severityWarning, size: 16),
                         SizedBox(width: 4),
-                        Text('Chemical spray postponed •\nSaved \$45', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.soilMoistureBrown, height: 1.2)),
+                        Expanded(
+                          child: Text(
+                            'Chemical spray postponed • Saved \$45',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -473,16 +704,19 @@ class HistoryScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerRight,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: AppColors.cardPurpleLight, borderRadius: BorderRadius.circular(8)),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('View Weather Radar', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                  SizedBox(width: 4),
-                  Icon(Icons.open_in_new, size: 12, color: AppColors.textPrimary),
-                ],
+            child: InkWell(
+              onTap: () => _showWeatherRadarDialog(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(color: const Color(0xFFF4F6FF), borderRadius: BorderRadius.circular(8)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text('View Weather Radar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    SizedBox(width: 6),
+                    Icon(Icons.open_in_new, size: 14, color: AppColors.textPrimary),
+                  ],
+                ),
               ),
             ),
           ),
@@ -491,15 +725,14 @@ class HistoryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNutrientCard() {
+  Widget _buildNutrientAlertCard(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,9 +741,9 @@ class HistoryScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: AppColors.primaryGreenLight, borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.eco_outlined, color: AppColors.primaryGreenDark, size: 24),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(color: AppColors.cardGreenBg, borderRadius: BorderRadius.circular(12)),
+                child: const Icon(Icons.eco_outlined, color: AppColors.primaryGreen, size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -520,24 +753,35 @@ class HistoryScreen extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Row(
-                          children: [
-                            Icon(Icons.science_outlined, size: 10, color: AppColors.textSecondary),
-                            SizedBox(width: 4),
-                            Text('Nutrient Management', style: TextStyle(color: AppColors.textSecondary, fontSize: 10)),
-                          ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: const Color(0xFFF4F6FF), borderRadius: BorderRadius.circular(12)),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.science, color: AppColors.textSecondary, size: 12),
+                              SizedBox(width: 4),
+                              Text('Nutrient Management', style: TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ),
-                        const Text('5 days ago', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        const Text('5 days ago', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text('Nitrogen Top Dressing', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                    const SizedBox(height: 6),
+                    const Text('Nitrogen Top Dressing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                     const SizedBox(height: 4),
-                    const Row(
-                      children: [
-                        Icon(Icons.trending_up, size: 14, color: AppColors.primaryGreen),
+                    Row(
+                      children: const [
+                        Icon(Icons.trending_up, color: AppColors.primaryGreen, size: 16),
                         SizedBox(width: 4),
-                        Text('Completed (Urea applied) •\nNDVI +8%', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primaryGreen, height: 1.2)),
+                        Expanded(
+                          child: Text(
+                            'Completed (Urea applied) • NDVI +8%',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -545,26 +789,27 @@ class HistoryScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(8)),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(4),
+          const SizedBox(height: 16),
+          InkWell(
+            onTap: () => _showNutrientLogDialog(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(color: const Color(0xFFF4F6FF), borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(color: Colors.green[800], borderRadius: BorderRadius.circular(4)),
+                    child: const Icon(Icons.grass, color: Colors.white, size: 20),
                   ),
-                  child: const Icon(Icons.landscape, color: Colors.grey, size: 16),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text('Batch #N-204 applied across 4.2 hec...', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                ),
-              ],
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text('Batch #N-204 applied across 4.2 hec...', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  ),
+                  const Icon(Icons.chevron_right, size: 16, color: AppColors.textSecondary),
+                ],
+              ),
             ),
           ),
         ],

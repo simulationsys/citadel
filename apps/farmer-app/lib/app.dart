@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'core/theme/app_colors.dart';
+import 'features/home/home_screen.dart';
 import 'features/advisory_detail/advisory_detail_screen.dart';
 import 'features/scan/scan_screen.dart';
 import 'features/history/history_screen.dart';
 import 'features/settings/settings_screen.dart';
-import 'widgets/main_scaffold.dart';
+import 'features/profile/profile_screen.dart';
 
 class CitadelApp extends StatelessWidget {
   const CitadelApp({super.key});
@@ -21,16 +22,17 @@ class CitadelApp extends StatelessWidget {
           seedColor: AppColors.primaryGreen,
           brightness: Brightness.light,
         ),
-        textTheme: GoogleFonts.notoSansTextTheme(),
+        textTheme: GoogleFonts.interTextTheme(),
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: AppBarTheme(
-          backgroundColor: AppColors.primaryGreen,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.textPrimary,
           elevation: 0,
-          titleTextStyle: GoogleFonts.notoSans(
+          centerTitle: false,
+          titleTextStyle: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         cardTheme: CardThemeData(
@@ -46,9 +48,9 @@ class CitadelApp extends StatelessWidget {
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(24),
             ),
-            textStyle: GoogleFonts.notoSans(
+            textStyle: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w600,
             ),
@@ -57,11 +59,12 @@ class CitadelApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (_) => const MainScaffold(),
+        '/': (_) => const HomeScreen(),
         '/advisory-detail': (_) => const AdvisoryDetailScreen(),
         '/scan': (_) => const ScanScreen(),
         '/history': (_) => const HistoryScreen(),
         '/settings': (_) => const SettingsScreen(),
+        '/profile': (_) => const ProfileScreen(),
       },
     );
   }
