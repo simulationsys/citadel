@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "citadel-pest-risk"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = []                       # risk_engine is pure stdlib
+
+[project.optional-dependencies]
+inference = ["numpy>=1.26,<3", "Pillow>=10,<12"]
+
+[tool.setuptools]
+package-dir = {"citadel_pest_risk" = "src"}
+packages = ["citadel_pest_risk"]
+

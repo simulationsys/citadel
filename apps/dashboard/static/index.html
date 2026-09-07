@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Citadel — Smart Farming Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0b130e;
+      --card-bg: rgba(21, 35, 26, 0.7);
+      --card-border: rgba(52, 211, 153, 0.15);
+      --accent-green: #10b981;
+      --accent-emerald: #059669;
+      --text-main: #ecfdf5;
+      --text-muted: #9ca3af;
+      --warning-amber: #f59e0b;
+      --danger-red: #ef4444;
+      --blue-info: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(5, 150, 105, 0.05) 0px, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-emerald));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 20px; color: #fff;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    }
+    h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+    .subtitle { font-size: 13px; color: var(--text-muted); font-weight: 400; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 500; color: #34d399;
+    }
+    .status-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 20px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .card:hover { border-color: rgba(52, 211, 153, 0.35); transform: translateY(-2px); }
+    .card-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px; }
+    .card-val { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #fff; }
+    .card-meta { font-size: 12px; color: var(--accent-green); margin-top: 6px; }
+
+    .main-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 28px; }
+    @media (max-width: 850px) { .main-layout { grid-template-columns: 1fr; } }
+    
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+    
+    .alerts-list { display: flex; flex-direction: column; gap: 12px; }
+    .alert-item {
+      background: var(--card-bg);
+      border-left: 4px solid var(--accent-green);
+      border-radius: 8px; padding: 16px 20px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .alert-item.warning { border-left-color: var(--warning-amber); }
+    .alert-item.critical { border-left-color: var(--danger-red); }
+    .alert-head { display: flex; justify-content: space-between; align-items: center; }
+    .alert-title { font-size: 15px; font-weight: 600; }
+    .alert-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
+    .alert-item.warning .alert-badge { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .alert-item.critical .alert-badge { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .alert-desc { font-size: 13px; color: var(--text-muted); }
+    .alert-action { font-size: 12px; font-weight: 600; color: #34d399; margin-top: 4px; }
+
+    .control-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px; padding: 20px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .relay-status {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; background: rgba(0, 0, 0, 0.3); border-radius: 10px;
+    }
+    .relay-badge { font-size: 14px; font-weight: 700; padding: 4px 12px; border-radius: 6px; }
+    .relay-badge.off { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .relay-badge.on { background: rgba(16, 185, 129, 0.2); color: #34d399; box-shadow: 0 0 12px rgba(52, 211, 153, 0.4); }
+    
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: 10px;
+      font-weight: 600; font-size: 14px; cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-emerald));
+      color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .demo-bar {
+      margin-top: 24px; padding: 18px; border-radius: 14px;
+      background: rgba(15, 23, 42, 0.6); border: 1px dashed rgba(255, 255, 255, 0.15);
+    }
+    .demo-bar h3 { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600; }
+    .demo-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-sm { padding: 8px 14px; font-size: 12px; border-radius: 8px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-main); cursor: pointer; }
+    .btn-sm:hover { background: rgba(52, 211, 153, 0.15); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-logo">C</div>
+        <div>
+          <h1>Citadel Farm Dashboard</h1>
+          <div class="subtitle">Offline-First Edge Node · Zone A (Tomato Field)</div>
+        </div>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span id="connState">Connecting to edge node…</span>
+      </div>
+    </header>
+
+    <!-- Metrics Grid -->
+    <div class="grid">
+      <div class="card">
+        <div class="card-label">Soil Moisture</div>
+        <div class="card-val" id="valMoisture">--%</div>
+        <div class="card-meta" id="metaMoisture">Target: 30-60%</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Temperature</div>
+        <div class="card-val" id="valTemp">--°C</div>
+        <div class="card-meta" id="metaTemp">Ambient Field</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Humidity</div>
+        <div class="card-val" id="valHumidity">--%</div>
+        <div class="card-meta">Relative Air</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Rainfall</div>
+        <div class="card-val" id="valRain">-- mm</div>
+        <div class="card-meta">Accumulated</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Water Level</div>
+        <div class="card-val" id="valWater">--%</div>
+        <div class="card-meta">Field Reservoir</div>
+      </div>
+    </div>
+
+    <!-- Main Section -->
+    <div class="main-layout">
+      <!-- Left: Active Advisories -->
+      <div>
+        <div class="section-title">
+          <span>Active Farm Advisories</span>
+          <small id="lastUpdated" style="font-weight: 400; color: var(--text-muted); font-size: 12px;"></small>
+        </div>
+        <div id="alertsContainer" class="alerts-list">
+          <div class="alert-item">
+            <div class="alert-title">Loading advisories...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Actuator Control & Vision AI -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="control-box">
+          <div class="section-title" style="margin-bottom: 0;">Pump Relay Control</div>
+          <div class="relay-status">
+            <span style="font-size: 13px; color: var(--text-muted);">Relay State</span>
+            <span id="relayBadge" class="relay-badge off">OFF</span>
+          </div>
+          <button class="btn btn-primary" onclick="toggleRelay()">Toggle Irrigation Pump</button>
+        </div>
+
+        <div class="control-box">
+          <div class="section-title" style="margin-bottom: 0;">Vision AI Diagnostics</div>
+          <div id="visionBox" style="font-size: 13px; color: var(--text-muted);">
+            <div>Crop: <strong id="vCrop" style="color: var(--text-main);">Tomato</strong></div>
+            <div>Latest Diagnosis: <strong id="vLabel" style="color: #34d399;">Healthy</strong></div>
+            <div>Confidence: <strong id="vConf" style="color: var(--text-main);">94%</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Simulation Bar for Hackathon Demo -->
+    <div class="demo-bar">
+      <h3>🚀 Quick Demo Test Simulations (Post Telemetry to Edge Node API)</h3>
+      <div class="demo-btns">
+        <button class="btn-sm" onclick="sendDemo('low_moisture')">Simulate Low Moisture (Dry Soil)</button>
+        <button class="btn-sm" onclick="sendDemo('flood')">Simulate Flood Risk (High Rain)</button>
+        <button class="btn-sm" onclick="sendDemo('disease')">Simulate Vision AI Leaf Blight</button>
+        <button class="btn-sm" onclick="sendDemo('normal')">Reset Normal Telemetry</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.origin;
+
+    async function loadFarmState() {
+      try {
+        const res = await fetch(`${API_BASE}/v1/farm-state`);
+        if (!res.ok) throw new Error('API Response Error');
+        const data = await res.json();
+        
+        // Update header status
+        document.getElementById('connState').textContent = `Edge Node Online · ${new Date(data.reading.capturedAt).toLocaleTimeString()}`;
+        
+        // Update metric values
+        document.getElementById('valMoisture').textContent = `${data.reading.soilMoisturePct}%`;
+        document.getElementById('valTemp').textContent = `${data.reading.temperatureC}°C`;
+        document.getElementById('valHumidity').textContent = `${data.reading.humidityPct}%`;
+        document.getElementById('valRain').textContent = `${data.reading.rainfallMm} mm`;
+        document.getElementById('valWater').textContent = `${data.reading.waterLevelPct}%`;
+
+        // Highlight low moisture
+        const valM = document.getElementById('valMoisture');
+        if (data.reading.soilMoisturePct < 30) {
+          valM.style.color = '#fbbf24';
+        } else {
+          valM.style.color = '#fff';
+        }
+
+        // Update relay status
+        const relayB = document.getElementById('relayBadge');
+        relayB.textContent = data.relayState;
+        relayB.className = `relay-badge ${data.relayState.toLowerCase()}`;
+
+        // Update Vision AI box
+        if (data.latestVision) {
+          document.getElementById('vCrop').textContent = data.latestVision.crop;
+          document.getElementById('vLabel').textContent = data.latestVision.label.replace('_', ' ');
+          document.getElementById('vConf').textContent = `${(data.latestVision.confidence * 100).toFixed(0)}%`;
+        }
+
+        // Update Advisories
+        const container = document.getElementById('alertsContainer');
+        if (!data.advisories || data.advisories.length === 0) {
+          container.innerHTML = `
+            <div class="alert-item">
+              <div class="alert-head">
+                <div class="alert-title">No Urgent Actions Required</div>
+                <span class="alert-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">OPTIMAL</span>
+              </div>
+              <div class="alert-desc">Field conditions are stable in Zone A.</div>
+            </div>`;
+        } else {
+          container.innerHTML = data.advisories.map(a => `
+            <div class="alert-item ${a.severity}">
+              <div class="alert-head">
+                <div class="alert-title">${a.title}</div>
+                <span class="alert-badge">${a.severity}</span>
+              </div>
+              <div class="alert-desc">${a.message}</div>
+              <div class="alert-action">Recommended Action: ${a.action}</div>
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        document.getElementById('connState').textContent = 'Edge Node Offline / Unreachable';
+      }
+    }
+
+    async function toggleRelay() {
+      try {
+        await fetch(`${API_BASE}/v1/actuator-command`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'TOGGLE', requestedBy: 'dashboard-ui' })
+        });
+        loadFarmState();
+      } catch (e) { alert('Failed to toggle relay'); }
+    }
+
+    async function sendDemo(type) {
+      if (type === 'low_moisture') {
+        await fetch(`${API_BASE}/v1/readings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ soilMoisturePct: 18, temperatureC: 36, humidityPct: 40, rainfallMm: 0, waterLevelPct: 10 })
+        });
+      } else if (type === 'flood') {
+        await fetch(`${API_BASE}/v1/readings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ soilMoisturePct: 65, temperatureC: 26, humidityPct: 90, rainfallMm: 35, waterLevelPct: 85 })
+        });
+      } else if (type === 'disease') {
+        await fetch(`${API_BASE}/v1/vision-results`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind: 'crop_health', crop: 'tomato', label: 'early_blight_fungal', confidence: 0.89 })
+        });
+      } else if (type === 'normal') {
+        await fetch(`${API_BASE}/v1/readings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ soilMoisturePct: 45, temperatureC: 28, humidityPct: 60, rainfallMm: 0, waterLevelPct: 20 })
+        });
+        await fetch(`${API_BASE}/v1/vision-results`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind: 'crop_health', crop: 'tomato', label: 'healthy', confidence: 0.96 })
+        });
+      }
+      loadFarmState();
+    }
+
+    loadFarmState();
+    setInterval(loadFarmState, 5000);
+  </script>
+</body>
+</html>

@@ -16,6 +16,9 @@ class CropRiskProfile:
     flood_rainfall_mm: float
     minimum_pest_confidence: float
     high_pest_count: int
+    # Minimum confidence for a crop_health observation to emit a disease_risk advisory.
+    # Kept here so no threshold is inline in rule code.
+    disease_confident_confidence: float = 0.85
 
 
 TOMATO_DEMO = CropRiskProfile(
@@ -29,6 +32,7 @@ TOMATO_DEMO = CropRiskProfile(
     flood_rainfall_mm=30,
     minimum_pest_confidence=0.65,
     high_pest_count=3,
+    disease_confident_confidence=0.85,
 )
 
 PROFILES = {TOMATO_DEMO.name: TOMATO_DEMO}

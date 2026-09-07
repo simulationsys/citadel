@@ -3,5 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "scripts": { "dev": "node src/server.js", "check": "node --check src/server.js" }
+  "scripts": {
+    "dev": ".\\.venv\\Scripts\\python.exe -m uvicorn backend.main:app --reload --port 3000",
+    "start": ".\\.venv\\Scripts\\python.exe -m uvicorn backend.main:app --port 3000",
+    "check": ".\\.venv\\Scripts\\python.exe -c \"import backend.main\""
+  }
 }

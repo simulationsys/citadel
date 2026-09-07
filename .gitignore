@@ -11,3 +11,6 @@ ml/vision/datasets/crop_health/test/
 ml/vision/.venv/
 ml/pest-risk/models/*.tflite
 firmware/esp32-field-node/config.h
+*.db
+.venv/
+*.egg-info/
