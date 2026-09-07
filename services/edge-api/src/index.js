@@ -80,7 +80,7 @@ http.createServer(async (request, response) => {
     if (request.method === 'POST' && approval) { const body = await readJson(request); const requestRecord = store.approveIrrigationRequest(approval[1], String(body.approvedBy ?? 'farmer')); return requestRecord ? send(response, 200, { request: requestRecord, note: 'Approved request is not a direct pump command.' }) : send(response, 404, { error: 'Irrigation request not found.' }); }
     if (request.method === 'POST' && url.pathname === '/v1/crop-health') {
       const buf = await readBuffer(request);
-      if (buf.length === 0) return send(response, 400, { error: 'No image provided.' });
+      if (buf.length === 0) return send(response, 400, { error: 'invalid_request', message: 'No image provided.' });
       const tmpPath = path.join(os.tmpdir(), `crop-health-${crypto.randomUUID()}.jpg`);
       await fs.writeFile(tmpPath, buf);
       try {
@@ -89,14 +89,22 @@ http.createServer(async (request, response) => {
         const { stdout } = await execFileAsync(pythonExecutable, ['-m', 'src.inference', tmpPath], { cwd: mlDir });
         const lines = stdout.trim().split('\n');
         const result = JSON.parse(lines[lines.length - 1]);
-        if (result.confidence >= 0.5 && result.label !== 'invalid_image' && result.label !== 'healthy') {
+        
+        // Sanitize internal fields from output contract
+        delete result._latency_ms;
+
+        // Save diseases and inconclusive results as observations
+        if (result.label !== 'invalid_image' && result.label !== 'healthy') {
           const observation = store.addObservation({ kind: 'crop_health', label: result.label, confidence: result.confidence, zoneId });
           const state = await farmState(observation.zoneId);
           return send(response, 200, { result, state });
         }
         return send(response, 200, { result });
       } catch (err) {
-        return send(response, 500, { error: 'Inference failed', details: err.message });
+        if (err.code === 1) {
+          return send(response, 503, { error: 'model_unavailable', message: 'Model artifact not found or failed to load.' });
+        }
+        return send(response, 500, { error: 'inference_error', details: err.message });
       } finally {
         await fs.unlink(tmpPath).catch(() => {});
       }

@@ -205,6 +205,33 @@ def test_disease_class():
     _report("disease_class: has_label",     data["label"] != "invalid_image")
 
 
+# -----------------------------------------------------------------------
+# Test: Missing Model
+# -----------------------------------------------------------------------
+def test_missing_model():
+    sample = "datasets/crop_health/test/healthy/06040967-7b02-43b5-a3fc-4490a9a7ded6___RS_HL 0508.JPG"
+    if not os.path.exists(sample):
+        _report("missing_model", False, "Sample image not found — skipped")
+        return
+        
+    model_path = os.path.join("models", "crop_health_mobilenetv2.tflite")
+    temp_path = os.path.join("models", "crop_health_mobilenetv2.tflite.bak")
+    
+    if os.path.exists(model_path):
+        os.rename(model_path, temp_path)
+        
+    try:
+        result = subprocess.run(
+            [PYTHON, "-m", "src.inference", sample],
+            capture_output=True, text=True
+        )
+        _report("missing_model: exit_code_1", result.returncode == 1)
+        _report("missing_model: stderr", "Error: Model artifact not found" in result.stderr)
+    finally:
+        if os.path.exists(temp_path):
+            os.rename(temp_path, model_path)
+
+
 # =======================================================================
 # Run all tests
 # =======================================================================
@@ -223,6 +250,7 @@ if __name__ == "__main__":
     test_missing_image()
     test_no_leaf()
     test_disease_class()
+    test_missing_model()
 
     print("=" * 60)
     print(f"Results: {PASSED} passed, {FAILED} failed out of {PASSED + FAILED}")

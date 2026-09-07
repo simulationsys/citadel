@@ -141,19 +141,19 @@ def main():
 
     # --- Load TFLite model ---
     model_path = os.path.join(os.path.dirname(__file__), "..", "models",
-                              "crop_health_mobilenetv2.tflite")
+                              "crop_health_mobilenetv2_v1.1.tflite")
     model_path = os.path.abspath(model_path)
 
     if not os.path.exists(model_path):
-        print(json.dumps(_invalid("Model artifact not found.")))
-        return
+        print(f"Error: Model artifact not found at {model_path}", file=sys.stderr)
+        sys.exit(1)
 
     try:
         interpreter = tf.lite.Interpreter(model_path=model_path)
         interpreter.allocate_tensors()
     except Exception as e:
-        print(json.dumps(_invalid(f"Failed to load model: {str(e)}")))
-        return
+        print(f"Error: Failed to load model: {str(e)}", file=sys.stderr)
+        sys.exit(1)
 
     input_details = interpreter.get_input_details()
     output_details = interpreter.get_output_details()
@@ -170,10 +170,16 @@ def main():
     confidence = float(output_data[max_idx])
     predicted_label = CLASSES[max_idx]
 
-    # --- Confidence policy ---
+    # --- Confidence policy (calibrated in Phase 6) ---
+    #   High  (>= 0.80): normal prediction
+    #   Medium (0.50–0.79): cautious prediction with qualifying note
+    #   Low   (< 0.50): override label to "inconclusive"
+    limitation = None
     if confidence < LOW_THRESHOLD:
         predicted_label = "inconclusive"
         limitation = "Model confidence is too low to identify a specific condition."
+    elif confidence < 0.80:
+        limitation = "Moderate confidence. Consider re-capturing a clearer close-up of the affected leaf."
 
     res = build_result(predicted_label, confidence, "acceptable", limitation)
     res["_latency_ms"] = round(latency_ms, 2)
