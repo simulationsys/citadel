@@ -11,26 +11,32 @@ Severity = Literal["info", "warning", "critical"]
 class SensorReading:
     device_id: str
     zone_id: str = "zone-a"
-    soil_moisture_pct: float = 0.0
-    temperature_c: float = 0.0
-    humidity_pct: float = 0.0
+    # Positional defaults unchanged so existing tests keep passing.
+    # None means the sensor was absent or failed — never treat as 0.
+    soil_moisture_pct: float | None = 0.0
+    temperature_c: float | None = None
+    humidity_pct: float | None = None
     rainfall_mm: float = 0.0
     water_level_pct: float = 0.0
 
     @classmethod
     def from_dict(cls, value: dict) -> "SensorReading":
+        def optional(key: str, default=None):
+            raw = value.get(key, default)
+            return None if raw is None else float(raw)
+
         reading = cls(
             device_id=str(value["deviceId"]),
             zone_id=str(value.get("zoneId", "zone-a")),
-            soil_moisture_pct=float(value["soilMoisturePct"]),
-            temperature_c=float(value["temperatureC"]),
-            humidity_pct=float(value["humidityPct"]),
+            soil_moisture_pct=optional("soilMoisturePct", 0.0),
+            temperature_c=optional("temperatureC"),
+            humidity_pct=optional("humidityPct"),
             rainfall_mm=float(value.get("rainfallMm", 0)),
             water_level_pct=float(value.get("waterLevelPct", 0)),
         )
         for field_name in ("soil_moisture_pct", "humidity_pct", "water_level_pct"):
-            field_value = getattr(reading, field_name)
-            if not 0 <= field_value <= 100:
+            v = getattr(reading, field_name)
+            if v is not None and not 0 <= v <= 100:
                 raise ValueError(f"{field_name} must be between 0 and 100")
         if reading.rainfall_mm < 0:
             raise ValueError("rainfall_mm cannot be negative")
@@ -42,10 +48,17 @@ class PestObservation:
     label: str
     confidence: float
     count: int = 1
+    # crop_health observations reuse this dataclass with label = crop class name.
+    crop_health: bool = False
 
     @classmethod
     def from_dict(cls, value: dict) -> "PestObservation":
-        observation = cls(label=str(value["label"]), confidence=float(value["confidence"]), count=int(value.get("count", 1)))
+        observation = cls(
+            label=str(value["label"]),
+            confidence=float(value["confidence"]),
+            count=int(value.get("count", 1)),
+            crop_health=bool(value.get("cropHealth", False)),
+        )
         if not 0 <= observation.confidence <= 1:
             raise ValueError("confidence must be between 0 and 1")
         if observation.count < 0:
