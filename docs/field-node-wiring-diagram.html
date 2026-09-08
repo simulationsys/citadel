@@ -1,0 +1,520 @@
+<!doctype html>
+<title>Field Node Wiring</title>
+<style>
+:root{
+  --paper:#f6f4ee;
+  --paper-raised:#ffffff;
+  --ink:#1e2530;
+  --ink-soft:#565f6e;
+  --rule:#d8d3c6;
+  --accent:#2563a8;
+  --accent-soft:#e3ecf6;
+  --power:#c0392b;
+  --ground:#1e2530;
+  --signal:#2563a8;
+  --resistor:#b8860b;
+  --ok:#2f7a4f;
+  --warn:#b8860b;
+  --missing:#a13d2f;
+  --board:#2f6f4f;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#161a20;
+    --paper-raised:#1e232b;
+    --ink:#e9e6dd;
+    --ink-soft:#9aa3af;
+    --rule:#333a44;
+    --accent:#6fa4dd;
+    --accent-soft:#233247;
+    --power:#e0685a;
+    --ground:#e9e6dd;
+    --signal:#6fa4dd;
+    --resistor:#d9a441;
+    --ok:#5fbf88;
+    --warn:#d9a441;
+    --missing:#e0685a;
+    --board:#5fae82;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#161a20;
+  --paper-raised:#1e232b;
+  --ink:#e9e6dd;
+  --ink-soft:#9aa3af;
+  --rule:#333a44;
+  --accent:#6fa4dd;
+  --accent-soft:#233247;
+  --power:#e0685a;
+  --ground:#e9e6dd;
+  --signal:#6fa4dd;
+  --resistor:#d9a441;
+  --ok:#5fbf88;
+  --warn:#d9a441;
+  --missing:#e0685a;
+  --board:#5fae82;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;
+  padding:40px 24px 64px;
+}
+.wrap{max-width:1080px;margin:0 auto}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:24px;
+  flex-wrap:wrap;
+  border-bottom:2px solid var(--ink);
+  padding-bottom:18px;
+  margin-bottom:28px;
+}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin:0 0 6px;
+}
+h1{
+  margin:0;
+  font-size:clamp(26px,4vw,36px);
+  font-weight:650;
+  letter-spacing:-0.01em;
+  text-wrap:balance;
+}
+.subhead{color:var(--ink-soft);font-size:14.5px;max-width:60ch;margin-top:6px}
+.meta{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12px;
+  color:var(--ink-soft);
+  text-align:right;
+  line-height:1.6;
+}
+
+h2{
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--ink-soft);
+  margin:0 0 14px;
+  font-weight:650;
+}
+
+section{margin-bottom:40px}
+
+/* ---- Inventory table ---- */
+.inv{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+  background:var(--paper-raised);
+  border:1px solid var(--rule);
+}
+.inv caption{display:none}
+.inv th{
+  text-align:left;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--ink-soft);
+  padding:10px 14px;
+  border-bottom:1px solid var(--rule);
+}
+.inv td{
+  padding:10px 14px;
+  border-bottom:1px solid var(--rule);
+  vertical-align:top;
+}
+.inv tr:last-child td{border-bottom:none}
+.inv td.part{font-weight:600}
+.pin{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--accent)}
+.status{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-family:"IBM Plex Mono",monospace;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  padding:3px 8px;
+  border-radius:3px;
+  white-space:nowrap;
+}
+.status.have{color:var(--ok);background:color-mix(in srgb, var(--ok) 14%, transparent)}
+.status.buy{color:var(--missing);background:color-mix(in srgb, var(--missing) 14%, transparent)}
+.status.sub{color:var(--warn);background:color-mix(in srgb, var(--warn) 16%, transparent)}
+.note{color:var(--ink-soft);font-size:12.5px}
+
+/* ---- Diagram ---- */
+.diagram-frame{
+  background:var(--paper-raised);
+  border:1px solid var(--rule);
+  padding:20px 20px 8px;
+}
+svg{display:block;width:100%;height:auto;font-family:"IBM Plex Mono",monospace}
+figcaption{
+  font-size:12.5px;
+  color:var(--ink-soft);
+  padding:12px 4px 4px;
+  border-top:1px solid var(--rule);
+  margin-top:14px;
+}
+
+.legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+  margin-top:16px;
+  font-size:12.5px;
+  color:var(--ink-soft);
+}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.swatch{width:18px;height:3px;border-radius:2px;display:inline-block}
+
+/* ---- Substitution notes ---- */
+.notes{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:14px;
+}
+.note-card{
+  background:var(--paper-raised);
+  border:1px solid var(--rule);
+  border-left:3px solid var(--warn);
+  padding:14px 16px;
+}
+.note-card.ok{border-left-color:var(--ok)}
+.note-card h3{
+  margin:0 0 6px;
+  font-size:13.5px;
+  font-weight:650;
+}
+.note-card p{
+  margin:0;
+  font-size:13px;
+  color:var(--ink-soft);
+  line-height:1.55;
+}
+.note-card code{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:12px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  padding:1px 5px;
+  border-radius:3px;
+}
+
+footer{
+  margin-top:36px;
+  padding-top:16px;
+  border-top:1px solid var(--rule);
+  font-size:12px;
+  color:var(--ink-soft);
+  font-family:"IBM Plex Mono",monospace;
+}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;650&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="eyebrow">Citadel &middot; Smart Farming &middot; Field Node</p>
+      <h1>ESP32 Sensor &amp; Actuator Wiring</h1>
+      <p class="subhead">Built from your actual kit &mdash; substitutions for DHT11, resistor values, and the missing rain gauge are called out below, not glossed over.</p>
+    </div>
+    <div class="meta">
+      Zone: zone&#8209;a &middot; Device: field&#8209;node&#8209;01<br>
+      Logic: ESP32 GPIO, 3.3V<br>
+      Rev. 2026&#8209;09&#8209;08
+    </div>
+  </header>
+
+  <section>
+    <h2>What you have vs. what the circuit needs</h2>
+    <table class="inv">
+      <thead>
+        <tr><th>Component</th><th>Your kit</th><th>Wired to</th><th>Note</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="part">ESP32&#8209;WROOM&#8209;32</td>
+          <td><span class="status have">Have</span></td>
+          <td class="pin">&mdash;</td>
+          <td class="note">Center of the circuit, all logic is 3.3V.</td>
+        </tr>
+        <tr>
+          <td class="part">Capacitive soil moisture v1.2</td>
+          <td><span class="status buy">To buy</span></td>
+          <td class="pin">AOUT&nbsp;&rarr;&nbsp;GPIO34</td>
+          <td class="note">&#8377;120. Skip the resistive two&#8209;prong kind &mdash; it corrodes in soil within days.</td>
+        </tr>
+        <tr>
+          <td class="part">DHT11 <span class="note">(swap for DHT22)</span></td>
+          <td><span class="status sub">Substitute</span></td>
+          <td class="pin">DATA&nbsp;&rarr;&nbsp;GPIO4</td>
+          <td class="note">0&ndash;50&deg;C, &plusmn;2&deg;C, 20&ndash;90% RH. Fine for a demo; re&#8209;check readings above ~45&deg;C field temps.</td>
+        </tr>
+        <tr>
+          <td class="part">HC&#8209;SR04 ultrasonic</td>
+          <td><span class="status have">Have</span></td>
+          <td class="pin">TRIG&nbsp;&rarr;&nbsp;GPIO32<br>ECHO&nbsp;&rarr;&nbsp;GPIO33</td>
+          <td class="note">ECHO is 5V &mdash; must pass through the divider, never straight to GPIO33.</td>
+        </tr>
+        <tr>
+          <td class="part">Tipping&#8209;bucket rain gauge</td>
+          <td><span class="status buy" style="background:color-mix(in srgb, var(--missing) 14%, transparent); color:var(--missing)">Not available</span></td>
+          <td class="pin">GPIO15 <em>(spare)</em></td>
+          <td class="note">See substitution note below &mdash; use an analog raindrop board, or report <code>rainfallMm: 0</code> for the demo.</td>
+        </tr>
+        <tr>
+          <td class="part">5V 1&#8209;ch relay module</td>
+          <td><span class="status have">Have</span></td>
+          <td class="pin">IN&nbsp;&rarr;&nbsp;GPIO26</td>
+          <td class="note">Pump wired through <strong>NO + COM</strong> only. Never NC.</td>
+        </tr>
+        <tr>
+          <td class="part">Mini pump</td>
+          <td><span class="status have">Have</span></td>
+          <td class="pin">via relay load side</td>
+          <td class="note">Runs off its own supply, switched by the relay &mdash; never straight off ESP32.</td>
+        </tr>
+        <tr>
+          <td class="part">5.6k&#937; resistor &times;2 <span class="note">(swap for 10k&#937;)</span></td>
+          <td><span class="status sub">Substitute</span></td>
+          <td class="pin">DHT11 pull&#8209;up</td>
+          <td class="note">Two in series &asymp; 11.2k&#937; &mdash; close enough to the 10k&#937; pull&#8209;up spec.</td>
+        </tr>
+        <tr>
+          <td class="part">1k&#937; resistor &times;3 <span class="note">(swap for 1k&#937;+2k&#937;)</span></td>
+          <td><span class="status sub">Substitute</span></td>
+          <td class="pin">HC&#8209;SR04 divider</td>
+          <td class="note">1 alone (1k&#937;) + 2 in series (2k&#937;) reproduces the exact 1:2 divider ratio.</td>
+        </tr>
+        <tr>
+          <td class="part">Raspberry Pi 4</td>
+          <td><span class="status sub">Arriving later</span></td>
+          <td class="pin">&mdash;</td>
+          <td class="note">Run the edge API on your laptop meanwhile &mdash; same code, just swap the IP in firmware once the Pi lands.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Connection diagram</h2>
+    <div class="diagram-frame">
+      <figure style="margin:0">
+        <svg viewBox="0 0 1040 620" role="img" aria-label="Wiring diagram: ESP32 DevKit at center connects to soil moisture sensor, DHT11, HC-SR04 through a resistor voltage divider, a relay module driving a mini pump, and a spare rain-gauge pin, with 3.3V, 5V and ground rails distributed to each part.">
+
+          <!-- ============ RAILS ============ -->
+          <line x1="60" y1="90" x2="60" y2="530" stroke="var(--power)" stroke-width="2.5"/>
+          <text x="60" y="76" text-anchor="middle" font-size="11" fill="var(--power)" font-weight="500">3.3V RAIL</text>
+
+          <line x1="980" y1="90" x2="980" y2="530" stroke="var(--power)" stroke-width="2.5" stroke-dasharray="2 4"/>
+          <text x="980" y="76" text-anchor="middle" font-size="11" fill="var(--power)" font-weight="500">5V RAIL</text>
+
+          <line x1="60" y1="565" x2="980" y2="565" stroke="var(--ground)" stroke-width="2.5"/>
+          <text x="520" y="600" text-anchor="middle" font-size="11" fill="var(--ground)" font-weight="500">GROUND RAIL &mdash; COMMON TO EVERY COMPONENT</text>
+
+          <!-- ============ ESP32 CENTER ============ -->
+          <rect x="410" y="230" width="220" height="160" rx="4" fill="var(--board)" opacity="0.14" stroke="var(--board)" stroke-width="1.5"/>
+          <text x="520" y="258" text-anchor="middle" font-size="14" font-weight="650" fill="var(--ink)">ESP32&#8209;WROOM&#8209;32</text>
+          <text x="520" y="274" text-anchor="middle" font-size="10.5" fill="var(--ink-soft)">DevKit &middot; 3.3V logic</text>
+
+          <!-- ESP32 left pin labels -->
+          <text x="422" y="300" font-size="10.5" fill="var(--ink-soft)">GPIO34</text>
+          <text x="422" y="318" font-size="10.5" fill="var(--ink-soft)">GPIO4</text>
+          <text x="422" y="336" font-size="10.5" fill="var(--ink-soft)">GPIO32</text>
+          <text x="422" y="354" font-size="10.5" fill="var(--ink-soft)">GPIO33</text>
+          <text x="422" y="372" font-size="10.5" fill="var(--ink-soft)">GPIO15 <tspan fill="var(--ink-soft)" opacity="0.6">(spare)</tspan></text>
+
+          <!-- ESP32 right pin label -->
+          <text x="618" y="300" text-anchor="end" font-size="10.5" fill="var(--ink-soft)">GPIO26</text>
+          <text x="618" y="372" text-anchor="end" font-size="10.5" fill="var(--power)">3V3 / 5V(VIN) / GND</text>
+
+          <!-- pin dots -->
+          <circle cx="412" cy="297" r="3" fill="var(--signal)"/>
+          <circle cx="412" cy="315" r="3" fill="var(--signal)"/>
+          <circle cx="412" cy="333" r="3" fill="var(--signal)"/>
+          <circle cx="412" cy="351" r="3" fill="var(--signal)"/>
+          <circle cx="412" cy="369" r="3" fill="var(--ink-soft)"/>
+          <circle cx="628" cy="297" r="3" fill="var(--signal)"/>
+
+          <!-- ============ SOIL MOISTURE (top-left) ============ -->
+          <g>
+            <rect x="120" y="110" width="150" height="72" rx="4" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3"/>
+            <text x="195" y="134" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">Soil Moisture</text>
+            <text x="195" y="150" text-anchor="middle" font-size="10" fill="var(--ink-soft)">capacitive v1.2</text>
+            <text x="195" y="168" text-anchor="middle" font-size="9.5" fill="var(--missing)">to buy &middot; &#8377;120</text>
+            <!-- VCC to 3.3V rail -->
+            <path d="M120,120 H60" fill="none" stroke="var(--power)" stroke-width="1.6"/>
+            <!-- GND -->
+            <path d="M270,175 H310 V565" fill="none" stroke="var(--ground)" stroke-width="1.6"/>
+            <!-- AOUT to GPIO34 -->
+            <path d="M270,157 H340 V297 H412" fill="none" stroke="var(--signal)" stroke-width="1.6" marker-end="url(#arrow)"/>
+          </g>
+
+          <!-- ============ DHT11 (mid-left) ============ -->
+          <g>
+            <rect x="120" y="255" width="150" height="90" rx="4" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3"/>
+            <text x="195" y="277" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">DHT11</text>
+            <text x="195" y="293" text-anchor="middle" font-size="10" fill="var(--ink-soft)">temp + humidity</text>
+            <text x="195" y="310" text-anchor="middle" font-size="9.5" fill="var(--warn)">sub for DHT22</text>
+            <!-- VCC -->
+            <path d="M120,264 H60" fill="none" stroke="var(--power)" stroke-width="1.6"/>
+            <!-- GND -->
+            <path d="M120,336 H60 V565 H310" fill="none" stroke="var(--ground)" stroke-width="1.6"/>
+            <!-- DATA to pull-up junction -->
+            <path d="M270,300 H330" fill="none" stroke="var(--signal)" stroke-width="1.6"/>
+          </g>
+
+          <!-- pull-up resistor pair for DHT11 -->
+          <g>
+            <rect x="330" y="222" width="18" height="56" rx="2" fill="none" stroke="var(--resistor)" stroke-width="1.6"/>
+            <line x1="339" y1="222" x2="339" y2="200" stroke="var(--resistor)" stroke-width="1.6"/>
+            <line x1="339" y1="200" x2="60" y2="200" stroke="var(--power)" stroke-width="1.6"/>
+            <text x="358" y="240" font-size="9.5" fill="var(--resistor)">5.6k&#937;</text>
+            <rect x="330" y="278" width="18" height="56" rx="2" fill="none" stroke="var(--resistor)" stroke-width="1.6"/>
+            <text x="358" y="310" font-size="9.5" fill="var(--resistor)">5.6k&#937;</text>
+            <text x="358" y="322" font-size="9" fill="var(--ink-soft)">series &asymp; 11.2k&#937;</text>
+            <path d="M339,278 H330" fill="none" stroke="var(--signal)" stroke-width="1.6"/>
+            <path d="M339,334 V318" fill="none" stroke="var(--signal)" stroke-width="1.6"/>
+            <path d="M339,300 H330" fill="none" stroke="var(--signal)" stroke-width="0" />
+            <path d="M339,300 L412,315" fill="none" stroke="var(--signal)" stroke-width="1.6" marker-end="url(#arrow)"/>
+            <path d="M339,334 H310" fill="none" stroke="var(--ground)" stroke-width="1.6"/>
+          </g>
+
+          <!-- ============ HC-SR04 (bottom-left) ============ -->
+          <g>
+            <rect x="120" y="400" width="150" height="96" rx="4" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3"/>
+            <text x="195" y="422" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">HC&#8209;SR04</text>
+            <text x="195" y="438" text-anchor="middle" font-size="10" fill="var(--ink-soft)">ultrasonic, water level</text>
+            <text x="195" y="456" text-anchor="middle" font-size="9.5" fill="var(--ok)">have</text>
+            <!-- VCC to 5V rail (dashed) -->
+            <path d="M120,410 H60 V565" fill="none" stroke="var(--power)" stroke-width="1.6" stroke-dasharray="2 4"/>
+            <text x="70" y="405" font-size="9" fill="var(--power)">5V</text>
+            <!-- GND -->
+            <path d="M120,486 H60" fill="none" stroke="var(--ground)" stroke-width="1.6"/>
+            <!-- TRIG to GPIO32 -->
+            <path d="M270,420 H370 V333 H412" fill="none" stroke="var(--signal)" stroke-width="1.6" marker-end="url(#arrow)"/>
+            <text x="374" y="330" font-size="9.5" fill="var(--ink-soft)">TRIG</text>
+            <!-- ECHO into divider -->
+            <path d="M270,472 H700" fill="none" stroke="var(--power)" stroke-width="1.6"/>
+            <text x="600" y="466" font-size="9.5" fill="var(--ink-soft)">ECHO (5V signal)</text>
+          </g>
+
+          <!-- ============ HC-SR04 voltage divider (center-bottom) ============ -->
+          <g>
+            <rect x="700" y="450" width="18" height="44" rx="2" fill="none" stroke="var(--resistor)" stroke-width="1.6"/>
+            <text x="722" y="466" font-size="9.5" fill="var(--resistor)">1k&#937;</text>
+            <path d="M700,472 H718" fill="none" stroke="none"/>
+            <line x1="718" y1="472" x2="740" y2="472" stroke="var(--power)" stroke-width="1.6" stroke-opacity="0"/>
+            <!-- junction node -->
+            <circle cx="750" cy="472" r="3.5" fill="var(--resistor)"/>
+            <path d="M718,472 H750" fill="none" stroke="var(--power)" stroke-width="1.6"/>
+            <path d="M750,472 H812 V351 H412" fill="none" stroke="var(--signal)" stroke-width="1.6" marker-end="url(#arrow)"/>
+            <text x="756" y="342" font-size="9.5" fill="var(--ink-soft)">to GPIO33 &asymp; 3.3V</text>
+
+            <rect x="750" y="494" width="18" height="56" rx="2" fill="none" stroke="var(--resistor)" stroke-width="1.6"/>
+            <text x="774" y="516" font-size="9.5" fill="var(--resistor)">1k&#937; + 1k&#937;</text>
+            <text x="774" y="528" font-size="9" fill="var(--ink-soft)">series = 2k&#937;</text>
+            <path d="M759,472 V494" fill="none" stroke="var(--resistor)" stroke-width="1.6"/>
+            <path d="M759,550 V565" fill="none" stroke="var(--ground)" stroke-width="1.6"/>
+          </g>
+
+          <!-- ============ Rain gauge spare (label only) ============ -->
+          <g>
+            <rect x="120" y="512" width="150" height="42" rx="4" fill="none" stroke="var(--missing)" stroke-width="1.3" stroke-dasharray="3 4"/>
+            <text x="195" y="530" text-anchor="middle" font-size="11" font-weight="600" fill="var(--missing)">Rain gauge &mdash; not fitted</text>
+            <text x="195" y="545" text-anchor="middle" font-size="9.5" fill="var(--ink-soft)">GPIO15 left free &middot; see note below</text>
+            <path d="M412,369 H340 V533 H270" fill="none" stroke="var(--ink-soft)" stroke-width="1.3" stroke-dasharray="3 3"/>
+          </g>
+
+          <!-- ============ RELAY (top-right) ============ -->
+          <g>
+            <rect x="740" y="110" width="160" height="80" rx="4" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3"/>
+            <text x="820" y="132" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">Relay module</text>
+            <text x="820" y="148" text-anchor="middle" font-size="10" fill="var(--ink-soft)">5V, 1&#8209;channel</text>
+            <text x="820" y="166" text-anchor="middle" font-size="9.5" fill="var(--ok)">have</text>
+            <!-- VCC -->
+            <path d="M900,124 H980" fill="none" stroke="var(--power)" stroke-width="1.6" stroke-dasharray="2 4"/>
+            <!-- GND -->
+            <path d="M900,150 H980 V565" fill="none" stroke="var(--ground)" stroke-width="1.6"/>
+            <!-- IN to GPIO26 -->
+            <path d="M740,140 H660 V297 H628" fill="none" stroke="var(--signal)" stroke-width="1.6" marker-end="url(#arrow)"/>
+            <text x="664" y="292" font-size="9.5" fill="var(--ink-soft)">IN</text>
+          </g>
+
+          <!-- ============ PUMP (bottom-right) ============ -->
+          <g>
+            <rect x="740" y="230" width="160" height="80" rx="4" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.3"/>
+            <text x="820" y="252" text-anchor="middle" font-size="12" font-weight="600" fill="var(--ink)">Mini pump</text>
+            <text x="820" y="268" text-anchor="middle" font-size="10" fill="var(--ink-soft)">own 5V/12V supply</text>
+            <text x="820" y="286" text-anchor="middle" font-size="9.5" fill="var(--ok)">have</text>
+
+            <!-- relay NO/COM to pump -->
+            <path d="M820,190 V230" fill="none" stroke="var(--power)" stroke-width="1.8"/>
+            <text x="828" y="212" font-size="9.5" fill="var(--power)">COM &rarr; NO</text>
+          </g>
+          <text x="820" y="330" text-anchor="middle" font-size="9.5" fill="var(--ink-soft)">pump switched via relay &mdash; never wired to NC</text>
+
+          <!-- ============ Arrowhead marker ============ -->
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="var(--signal)"/>
+            </marker>
+          </defs>
+
+        </svg>
+        <figcaption>ESP32 field node: soil moisture, DHT11, and HC&#8209;SR04 feed sensor data in; a relay switches the mini pump. The HC&#8209;SR04&rsquo;s 5V echo passes through a 1k&#937;/2k&#937; divider (built from your three 1k&#937; resistors) before reaching GPIO33. Rain gauge input is left unwired &mdash; GPIO15 stays free for it.</figcaption>
+      </figure>
+    </div>
+    <div class="legend">
+      <span><i class="swatch" style="background:var(--power)"></i>Power (3.3V solid / 5V dashed)</span>
+      <span><i class="swatch" style="background:var(--ground)"></i>Ground</span>
+      <span><i class="swatch" style="background:var(--signal)"></i>Signal to GPIO</span>
+      <span><i class="swatch" style="background:var(--resistor)"></i>Resistor</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Substitution notes for your kit</h2>
+    <div class="notes">
+      <div class="note-card ok">
+        <h3>DHT11 instead of DHT22</h3>
+        <p>Wire identically to DHT22 &mdash; VCC to 3.3V, DATA to GPIO4 with the pull&#8209;up, GND to ground. Firmware only needs the Adafruit <code>DHT</code> library set to <code>DHT11</code> instead of <code>DHT22</code>. Expect noisier readings and a 50&deg;C ceiling; fine for an indoor/demo run.</p>
+      </div>
+      <div class="note-card ok">
+        <h3>5.6k&#937; &times;2 instead of 10k&#937;</h3>
+        <p>Two 5.6k&#937; resistors in series give &asymp;11.2k&#937;, close enough for the DHT pull&#8209;up &mdash; it isn&rsquo;t a precision value, just needs to be in the 4.7&ndash;12k&#937; range.</p>
+      </div>
+      <div class="note-card ok">
+        <h3>1k&#937; &times;3 instead of 1k&#937;+2k&#937;</h3>
+        <p>Use one 1k&#937; from ECHO to the junction, and two 1k&#937; in series (=2k&#937;) from the junction to GND. Same 1:2 ratio as the spec &rarr; 5V &times; (2k&#937;/3k&#937;) = 3.33V at GPIO33. Safe.</p>
+      </div>
+      <div class="note-card">
+        <h3>No tipping&#8209;bucket rain gauge</h3>
+        <p>Two options: (1) buy a cheap analog raindrop board (&#8377;80&ndash;100) wired to GPIO15 as an ADC input, mapped to an approximate mm scale; or (2) for the demo, hardcode <code>rainfallMm: 0</code> in firmware and narrate the flood scenario using the water&#8209;level sensor instead &mdash; the advisory engine already treats <code>waterLevelPct &gt;= 75</code> as flood risk on its own.</p>
+      </div>
+      <div class="note-card">
+        <h3>Raspberry Pi not here yet</h3>
+        <p>Run <code>npm run dev:edge</code> on your laptop and point the firmware&rsquo;s <code>EDGE_API_URL</code> at your laptop&rsquo;s LAN IP. When the Pi arrives, everything moves over by changing that one URL and running the same command there.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Citadel field node &middot; docs/hardware-wiring-guide.md &amp; docs/iot-sensor-integration-guide.md have the full step&#8209;by&#8209;step and firmware reference.
+  </footer>
+
+</div>
