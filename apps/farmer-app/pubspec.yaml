@@ -19,6 +19,8 @@ dependencies:
   intl: ^0.20.3
   google_fonts: ^6.2.0
   objective_c: 8.0.0
+  speech_to_text: ^7.4.0
+  flutter_tts: ^4.2.5
 
 dev_dependencies:
   flutter_test:

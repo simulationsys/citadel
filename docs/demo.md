@@ -101,3 +101,36 @@ and repeat steps 1–5.
 
 Do not claim cloud recovery. The sync code is implemented and dormant; it has
 not been demonstrated end to end.
+
+## 7. Farmer analytics report
+
+Open **Insights** in the Flutter app, choose 24 hours, 7 days, or 30 days, and
+tap **Get to know my farm**. The report is calculated from the local SQLite
+sensor readings, crop scans, risk events, and irrigation history.
+
+It explains what every sensor means for the crop, shows averages, ranges,
+trends and data completeness, summarizes crop-health scans, and prioritizes
+next actions. It follows the farmer's selected English, Hindi, Haryanvi, or
+Punjabi language. No internet, cloud database, API key, or generative-AI
+service is used.
+
+## 8. Online voice assistant
+
+The assistant is the only demo feature that requires public internet. Copy
+`services/edge-api/.env.example` to `services/edge-api/.env` and set:
+
+```env
+GEMINI_API_KEY=your_google_ai_studio_key
+CITADEL_ASSISTANT_MODEL=gemini-2.5-flash
+```
+
+Restart the Edge API, then confirm `/health` returns
+`onlineAssistant.configured: true`. Tap the microphone in the Flutter home
+header, speak or type a farm question, and wait for Citadel to answer aloud.
+
+The demo RAG layer retrieves only from Citadel's curated farming guidance and
+the selected zone's latest seven-day local analytics. It refuses unsupported
+diagnosis, pesticide dosage, and irrigation activation. If the key, internet,
+speech recognition, or Gemini is unavailable, the assistant alone reports an
+error; sensor ingestion, local analytics, crop scanning, dashboard access, and
+irrigation continue independently.

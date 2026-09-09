@@ -4,6 +4,8 @@ import '../models/advisory.dart';
 import '../models/crop_health_result.dart';
 import '../models/farm_state.dart';
 import '../models/irrigation_request.dart';
+import '../models/farm_analytics_report.dart';
+import '../models/farm_assistant_response.dart';
 import '../models/reading.dart';
 import 'farm_state_repository.dart';
 
@@ -82,5 +84,22 @@ class MockFarmStateRepository implements FarmStateRepository {
       stage: approved ? IrrigationStage.approved : IrrigationStage.declined,
       request: request,
     );
+  }
+
+  @override
+  Future<FarmAnalyticsReport> analyzeFarm({int hours = 168}) async =>
+      FarmAnalyticsReport(
+        zoneId: 'demo-zone', generatedAt: DateTime.now(), periodHours: hours,
+        readingCount: 0, completenessPct: 0, cropScanCount: 0,
+        irrigationRequestCount: 0, approvedIrrigationCount: 0,
+        metrics: const {}, risks: const {}, cropLabels: const {},
+        recommendations: const [FarmRecommendation(priority: 'low',
+          title: 'Demo mode', message: 'Connect to the edge node for a real report.')],
+      );
+
+  @override
+  Future<FarmAssistantResponse> askAssistant(String question, String language) {
+    throw const FarmAssistantException(
+        'The online assistant is unavailable in demo-data mode.');
   }
 }

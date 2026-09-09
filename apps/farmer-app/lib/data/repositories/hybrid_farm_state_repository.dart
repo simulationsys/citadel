@@ -3,6 +3,8 @@ import 'dart:io';
 import '../models/crop_health_result.dart';
 import '../models/farm_state.dart';
 import '../models/irrigation_request.dart';
+import '../models/farm_analytics_report.dart';
+import '../models/farm_assistant_response.dart';
 import 'farm_state_repository.dart';
 import 'http_farm_state_repository.dart';
 
@@ -43,4 +45,12 @@ class HybridFarmStateRepository implements FarmStateRepository {
           approved: approved,
           requestedBy: requestedBy,
           maxRuntimeSec: maxRuntimeSec);
+
+  @override
+  Future<FarmAnalyticsReport> analyzeFarm({int hours = 168}) =>
+      live.analyzeFarm(hours: hours);
+
+  @override
+  Future<FarmAssistantResponse> askAssistant(String question, String language) =>
+      live.askAssistant(question, language);
 }

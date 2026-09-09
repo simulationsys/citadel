@@ -11,9 +11,11 @@ from fastapi.staticfiles import StaticFiles
 from . import db as store
 from . import sync
 from . import vision
+from . import assistant
 from .advisories import build_advisories
+from .analytics import build_report
 from .schemas import (
-    ActuatorCommandInput, FarmStateResponse, IrrigationApprovalInput,
+    ActuatorCommandInput, AssistantQuestion, FarmStateResponse, IrrigationApprovalInput,
     IrrigationRequestInput, IrrigationRequestResponse, ObservationInput,
     ObservationResponse, ReadingAck, SensorReadingInput, VisionResponse,
 )
@@ -103,6 +105,7 @@ def health_check():
         "modelStatus": {"cropHealth": vision.status(), "pest": {"available": False}},
         "pendingSyncCount": store.pending_sync_count(),
         "actuatorInSync": store.in_sync(actuator),
+        "onlineAssistant": {"configured": assistant.configured(), "model": assistant.MODEL},
     }
 
 
@@ -121,6 +124,26 @@ def get_farm_state(zoneId: str = Query(default=DEFAULT_ZONE)):
 @app.get("/v1/history")
 def get_history(zoneId: str = Query(default=DEFAULT_ZONE), limit: int = 20):
     return {"zoneId": zoneId, "readings": store.get_readings_history(zoneId, limit)}
+
+
+@app.get("/v1/analytics/report")
+def get_analytics_report(
+    zoneId: str = Query(default=DEFAULT_ZONE),
+    hours: int = Query(default=168, ge=1, le=2160),
+):
+    """Generate an on-demand report entirely from local edge history."""
+    return build_report(zoneId, hours)
+
+
+@app.post("/v1/assistant/ask")
+def ask_farm_assistant(payload: AssistantQuestion):
+    """Online-only RAG assistant; local farm services remain independent."""
+    try:
+        return assistant.answer(payload.question, payload.zoneId, payload.language)
+    except assistant.AssistantUnavailable as error:
+        raise HTTPException(status_code=503, detail={
+            "code": "assistant_unavailable", "message": str(error),
+        }) from error
 
 
 @app.post("/v1/readings", response_model=ReadingAck, status_code=201)

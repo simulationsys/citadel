@@ -21,6 +21,11 @@ class AppStrings {
       AppLanguage.haryanvi: 'सलाह',
       AppLanguage.punjabi: 'ਸਲਾਹ',
     },
+    'Insights': {
+      AppLanguage.hindi: 'समझ',
+      AppLanguage.haryanvi: 'जानकारी',
+      AppLanguage.punjabi: 'ਜਾਣਕਾਰੀ',
+    },
     'Profile': {
       AppLanguage.hindi: 'प्रोफ़ाइल',
       AppLanguage.haryanvi: 'प्रोफ़ाइल',

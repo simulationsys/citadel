@@ -16,6 +16,8 @@ substitute.
 | GET | `/v1/zones` | Zones that have reported |
 | GET | `/v1/farm-state?zoneId=` | Reading, server-computed `freshness`, observations, advisories, actuator, pending requests |
 | GET | `/v1/history?zoneId=&limit=` | Recent readings, oldest first |
+| GET | `/v1/analytics/report?zoneId=&hours=` | On-demand local farmer report from sensor, scan, risk, and irrigation history |
+| POST | `/v1/assistant/ask` | Optional online Gemini RAG assistant using curated guidance and the latest local farm report |
 | POST | `/v1/readings` | Node uplink. **201** stored, **200** duplicate replay. Both carry `command` |
 | POST | `/v1/observations` | Crop-health or pest observations |
 | POST | `/v1/crop-health?zoneId=` | **multipart/form-data**, field name `image` |

@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/crop_health_result.dart';
 import '../models/farm_state.dart';
 import '../models/irrigation_request.dart';
+import '../models/farm_analytics_report.dart';
+import '../models/farm_assistant_response.dart';
 import 'farm_state_repository.dart';
 
 /// Talks to the consolidated Python edge API (`services/edge-api`, port 3001)
@@ -265,5 +267,50 @@ class HttpFarmStateRepository implements FarmStateRepository {
       return 'Connected — ${body['service']} (${body['mode']}, $model)';
     }
     return 'Responded with status ${res.statusCode}';
+  }
+
+  @override
+  Future<FarmAnalyticsReport> analyzeFarm({int hours = 168}) async {
+    final uri = Uri.parse('$_root/v1/analytics/report?zoneId=$zoneId&hours=$hours');
+    final response = await _client.get(uri).timeout(timeout);
+    if (response.statusCode != 200) {
+      throw HttpException('analytics ${response.statusCode}: ${_detail(response.body)}');
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) throw const FormatException('analytics body is not an object');
+    return FarmAnalyticsReport.fromJson(decoded.cast<String, dynamic>());
+  }
+
+  @override
+  Future<FarmAssistantResponse> askAssistant(String question, String language) async {
+    late http.Response response;
+    try {
+      response = await _client.post(
+        Uri.parse('$_root/v1/assistant/ask'),
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode({'question': question, 'zoneId': zoneId, 'language': language}),
+      ).timeout(const Duration(seconds: 25));
+    } on TimeoutException {
+      throw const FarmAssistantException('The online assistant took too long to respond.');
+    } on SocketException {
+      throw const FarmAssistantException(
+          'Internet is unavailable. Local farm monitoring is still working.');
+    } on http.ClientException {
+      throw const FarmAssistantException(
+          'Cannot reach the online assistant. Local farm monitoring is still working.');
+    }
+    if (response.statusCode != 200) {
+      throw FarmAssistantException(_detail(response.body),
+          statusCode: response.statusCode);
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw const FarmAssistantException('Assistant response was unreadable.');
+    }
+    final result = FarmAssistantResponse.fromJson(decoded.cast<String, dynamic>());
+    if (result.answer.trim().isEmpty) {
+      throw const FarmAssistantException('Assistant returned an empty answer.');
+    }
+    return result;
   }
 }

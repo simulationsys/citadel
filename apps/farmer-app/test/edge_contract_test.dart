@@ -16,6 +16,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:citadel_farmer_app/data/models/crop_health_result.dart';
 import 'package:citadel_farmer_app/data/models/farm_state.dart';
+import 'package:citadel_farmer_app/data/models/farm_analytics_report.dart';
+import 'package:citadel_farmer_app/data/models/farm_assistant_response.dart';
 import 'package:citadel_farmer_app/data/models/irrigation_request.dart';
 import 'package:citadel_farmer_app/data/models/reading.dart';
 import 'package:citadel_farmer_app/data/repositories/http_farm_state_repository.dart';
@@ -490,6 +492,88 @@ void main() {
           timeout: const Duration(milliseconds: 20));
       await expectLater(slow.decideIrrigation(approved: true),
           throwsA(isA<IrrigationException>()));
+    });
+  });
+
+  group('local analytics report', () {
+    Map<String, dynamic> analyticsReport() => {
+      'status': 'ok',
+      'mode': 'local-edge-analysis',
+      'zoneId': 'zone-a',
+      'generatedAt': '2026-09-10T10:00:00+00:00',
+      'period': {'hours': 168},
+      'summary': {
+        'readingCount': 42,
+        'dataCompletenessPct': 80.0,
+        'cropScanCount': 2,
+        'irrigationRequestCount': 3,
+        'approvedIrrigationCount': 1,
+      },
+      'metrics': {
+        'soilMoisturePct': {
+          'unit': '%', 'count': 42, 'latest': 31.0, 'average': 28.5,
+          'minimum': 18.0, 'maximum': 45.0, 'trend': 'rising',
+        },
+      },
+      'risks': {'irrigation': 7, 'heat': 2},
+      'cropHealth': {'labelCounts': {'healthy': 1, 'early_blight': 1}},
+      'recommendations': [{
+        'priority': 'medium', 'title': 'Review irrigation timing',
+        'message': 'Low-moisture conditions appeared in 7 readings.',
+      }],
+    };
+
+    test('parses metrics, risks, scans and recommendations', () {
+      final report = FarmAnalyticsReport.fromJson(analyticsReport());
+      expect(report.readingCount, 42);
+      expect(report.completenessPct, 80.0);
+      expect(report.metrics['soilMoisturePct']!.average, 28.5);
+      expect(report.metrics['soilMoisturePct']!.trend, 'rising');
+      expect(report.risks['irrigation'], 7);
+      expect(report.cropLabels['early_blight'], 1);
+      expect(report.recommendations.single.priority, 'medium');
+    });
+
+    test('requests the selected period and zone from the local edge', () async {
+      final client = MockClient((request) async {
+        expect(request.url.path, '/v1/analytics/report');
+        expect(request.url.queryParameters['zoneId'], 'zone-a');
+        expect(request.url.queryParameters['hours'], '24');
+        return http.Response(jsonEncode(analyticsReport()), 200);
+      });
+      final report = await repo(client).analyzeFarm(hours: 24);
+      expect(report.readingCount, 42);
+    });
+  });
+
+  group('online farm assistant', () {
+    test('sends question, language and zone without an API key in the app', () async {
+      final client = MockClient((request) async {
+        expect(request.url.path, '/v1/assistant/ask');
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
+        expect(body['question'], 'Why is my soil dry?');
+        expect(body['language'], 'Hindi');
+        expect(body['zoneId'], 'zone-a');
+        expect(request.body.toLowerCase(), isNot(contains('api_key')));
+        return http.Response(jsonEncode({
+          'answer': 'मिट्टी की नमी कम दर्ज हुई है।',
+          'language': 'Hindi',
+          'model': 'gemini-2.5-flash',
+          'sources': ['Soil moisture'],
+          'onlineOnly': true,
+        }), 200);
+      });
+      final answer = await repo(client).askAssistant('Why is my soil dry?', 'Hindi');
+      expect(answer.answer, contains('नमी'));
+      expect(answer.sources, ['Soil moisture']);
+    });
+
+    test('assistant failure is explicit and isolated', () async {
+      final client = MockClient((_) async => http.Response(jsonEncode({
+        'detail': {'code': 'assistant_unavailable', 'message': 'No internet'}
+      }), 503));
+      await expectLater(repo(client).askAssistant('Help my crop', 'English'),
+          throwsA(isA<FarmAssistantException>()));
     });
   });
 }

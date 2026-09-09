@@ -22,7 +22,7 @@ class AppBottomNav extends StatelessWidget {
         Navigator.pushNamed(context, '/scan');
         break;
       case 2:
-        Navigator.pushNamed(context, '/history');
+        Navigator.pushNamed(context, '/analytics');
         break;
       case 3:
         Navigator.pushNamed(context, '/profile');
@@ -56,7 +56,7 @@ class AppBottomNav extends StatelessWidget {
             children: [
               Expanded(child: _item(context, Icons.home_rounded, AppStrings.translate('Home', settings.language), 0)),
               Expanded(child: _item(context, Icons.qr_code_scanner_rounded, AppStrings.translate('Scanner', settings.language), 1)),
-              Expanded(child: _item(context, Icons.help_outline_rounded, AppStrings.translate('Advisory', settings.language), 2)),
+              Expanded(child: _item(context, Icons.analytics_outlined, AppStrings.translate('Insights', settings.language), 2)),
               Expanded(child: _item(context, Icons.person_outline_rounded, AppStrings.translate('Profile', settings.language), 3)),
             ],
           ),

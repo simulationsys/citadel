@@ -13,6 +13,8 @@ import 'features/settings/settings_screen.dart';
 import 'features/profile/profile_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/splash/splash_screen.dart';
+import 'features/analytics/analytics_screen.dart';
+import 'features/assistant/farm_assistant_screen.dart';
 
 class CitadelApp extends StatelessWidget {
   const CitadelApp({super.key});
@@ -71,6 +73,8 @@ class CitadelApp extends StatelessWidget {
         '/advisory-detail': (_) => const AdvisoryDetailScreen(),
         '/scan': (_) => const ScanScreen(),
         '/history': (_) => const HistoryScreen(),
+        '/analytics': (_) => const AnalyticsScreen(),
+        '/assistant': (_) => const FarmAssistantScreen(),
         '/settings': (_) => const SettingsScreen(),
         '/profile': (_) => const ProfileScreen(),
       },

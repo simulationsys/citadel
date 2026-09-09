@@ -6,6 +6,10 @@
 	<string>Citadel uses the camera to photograph crop leaves for local crop-health analysis.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Citadel can analyze a crop image selected from your photo library.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Citadel uses the microphone when you ask the online farm assistant a question.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Citadel converts your spoken farm question into text for the online assistant.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Citadel connects to the farm edge computer on your local Wi-Fi network.</string>
 	<key>NSAppTransportSecurity</key>

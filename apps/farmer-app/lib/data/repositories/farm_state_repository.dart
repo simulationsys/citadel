@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../models/crop_health_result.dart';
 import '../models/farm_state.dart';
 import '../models/irrigation_request.dart';
+import '../models/farm_analytics_report.dart';
+import '../models/farm_assistant_response.dart';
 
 // DataFreshness moved to models/farm_state.dart (it describes the payload, not
 // the repository). Re-exported so existing `import ...farm_state_repository.dart`
@@ -31,6 +33,12 @@ abstract class FarmStateRepository {
     String requestedBy,
     int? maxRuntimeSec,
   });
+
+  /// Analyze locally stored sensor and crop history on the edge node.
+  Future<FarmAnalyticsReport> analyzeFarm({int hours = 168});
+
+  /// Ask the optional online assistant. This must never affect local features.
+  Future<FarmAssistantResponse> askAssistant(String question, String language);
 }
 
 /// Exposes repository state to the widget tree.
@@ -48,6 +56,9 @@ class FarmStateProvider extends ChangeNotifier {
   IrrigationStage _irrigationStage = IrrigationStage.recommended;
   IrrigationOutcome? _lastIrrigationOutcome;
   String? _irrigationError;
+  FarmAnalyticsReport? _analyticsReport;
+  bool _isAnalyzingFarm = false;
+  String? _analyticsError;
 
   /// True when this provider is knowingly serving demo data.
   final bool isDemoMode;
@@ -71,6 +82,9 @@ class FarmStateProvider extends ChangeNotifier {
   IrrigationStage get irrigationStage => _irrigationStage;
   IrrigationOutcome? get lastIrrigationOutcome => _lastIrrigationOutcome;
   String? get irrigationError => _irrigationError;
+  FarmAnalyticsReport? get analyticsReport => _analyticsReport;
+  bool get isAnalyzingFarm => _isAnalyzingFarm;
+  String? get analyticsError => _analyticsError;
 
   /// A decision is in flight — the UI disables repeat taps on this.
   bool get isIrrigationBusy => _irrigationStage == IrrigationStage.creating;
@@ -176,4 +190,24 @@ class FarmStateProvider extends ChangeNotifier {
     _irrigationError = null;
     notifyListeners();
   }
+
+  Future<bool> analyzeFarm({int hours = 168}) async {
+    if (_isAnalyzingFarm) return false;
+    _isAnalyzingFarm = true;
+    _analyticsError = null;
+    notifyListeners();
+    try {
+      _analyticsReport = await _repository.analyzeFarm(hours: hours);
+      return true;
+    } catch (error) {
+      _analyticsError = 'Could not generate the farm report: $error';
+      return false;
+    } finally {
+      _isAnalyzingFarm = false;
+      notifyListeners();
+    }
+  }
+
+  Future<FarmAssistantResponse> askAssistant(String question, String language) =>
+      _repository.askAssistant(question, language);
 }

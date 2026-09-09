@@ -163,3 +163,9 @@ class ReadingAck(FarmStateResponse):
     """POST /v1/readings: the farm state plus the downlink the node came for."""
     duplicate: bool = False
     command: RelayCommand
+
+
+class AssistantQuestion(BaseModel):
+    question: str = Field(..., min_length=2, max_length=500)
+    zoneId: str = Field(default="zone-a", min_length=1, max_length=100)
+    language: Literal["English", "Hindi", "Haryanvi", "Punjabi"] = "English"

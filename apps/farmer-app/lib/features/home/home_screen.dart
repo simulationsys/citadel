@@ -182,6 +182,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       actions: [
+        IconButton(
+          tooltip: 'Online farm assistant',
+          onPressed: () => Navigator.pushNamed(context, '/assistant'),
+          icon: const Icon(Icons.mic_rounded, color: AppColors.primaryGreen),
+        ),
         const ProfileAvatarButton(margin: EdgeInsets.only(right: 16, left: 12)),
       ],
     );
