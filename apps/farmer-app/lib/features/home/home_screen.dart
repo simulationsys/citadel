@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import '../../data/models/reading.dart';
 import '../../data/repositories/farm_state_repository.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/freshness_banner.dart';
+import '../../widgets/profile_avatar_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -264,7 +266,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  AppStrings.translate('Citadel Farm', settings.isHindi),
+                  AppStrings.translate('Citadel Farm', settings.language),
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -274,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        AppStrings.translate('Online • Synced', settings.isHindi),
+                        AppStrings.translate('Online • Synced', settings.language),
                         style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -301,20 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => _showMicDialog(context),
           ),
         ),
-        InkWell(
-          onTap: () => Navigator.pushNamed(context, '/profile'),
-          child: Container(
-            margin: const EdgeInsets.only(right: 16, left: 12),
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            alignment: Alignment.center,
-            child: const Text('img', style: TextStyle(fontSize: 10, color: Colors.black54)),
-          ),
-        ),
+        const ProfileAvatarButton(margin: EdgeInsets.only(right: 16, left: 12)),
       ],
     );
   }
@@ -343,7 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildHighSeverityAlert(topAlert),
               const SizedBox(height: 24),
               _buildSectionTitle(
-                AppStrings.translate('Real-time Sensors', settings.isHindi),
+                AppStrings.translate('Real-time Sensors', settings.language),
                 actionText: 'Field A Live',
                 onActionTap: () => _showSensorDetailDialog(context, 'Field A Overview', '4 Active Nodes', 'All Operational'),
               ),
@@ -351,7 +340,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildSensorsGrid(reading),
               const SizedBox(height: 24),
               _buildSectionTitle(
-                AppStrings.translate('Active Crop Track', settings.isHindi),
+                AppStrings.translate('Active Crop Track', settings.language),
                 actionText: 'All Plots',
                 onActionTap: () => _showCropTrackDialog(context),
               ),
@@ -369,36 +358,60 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildGreetingSection(Reading? reading, AppSettingsProvider settings) {
     final temp = reading != null ? '${reading.temperatureC.toStringAsFixed(0)}°C' : '34°C';
-    final greeting = settings.isHindi ? 'सुप्रभात,\n${settings.userName}' : 'Good\nMorning,\n${settings.userName}';
+    final greeting = '${AppStrings.translate('Good Morning', settings.language)},\n${settings.userName}';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 100,
-          height: 80,
-          decoration: BoxDecoration(
-            color: Colors.grey[300],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          alignment: Alignment.center,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              const Center(child: Text('img', style: TextStyle(fontSize: 12, color: Colors.black54))),
-              Positioned(
-                bottom: -4,
-                right: -4,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryGreen,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
+        GestureDetector(
+          onTap: () => Navigator.pushNamed(context, '/profile'),
+          child: Container(
+            width: 84,
+            height: 84,
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.primaryGreen.withValues(alpha: 0.2),
+                width: 1.5,
+              ),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: settings.profileImagePath != null
+                        ? Image.file(
+                            File(settings.profileImagePath!),
+                            fit: BoxFit.cover,
+                            width: 76,
+                            height: 76,
+                          )
+                        : Image.asset(
+                            'assets/images/farmer_avatar.png',
+                            fit: BoxFit.contain,
+                            width: 76,
+                            height: 76,
+                          ),
                   ),
                 ),
-              ),
-            ],
+                Positioned(
+                  bottom: -2,
+                  right: -2,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryGreen,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -412,7 +425,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                '${AppStrings.translate('Wednesday', settings.isHindi)}, 28 ${AppStrings.translate('May', settings.isHindi)}\n${AppStrings.translate(settings.farmingCycle, settings.isHindi)}',
+                '${AppStrings.translate('Wednesday', settings.language)}, 28 ${AppStrings.translate('May', settings.language)}\n${AppStrings.translate(settings.farmingCycle, settings.language)}',
                 style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
               ),
             ],
@@ -451,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ? 'never'
         : '${DateTime.now().difference(provider.lastFetchTime!).inMinutes}m ago';
     final label = freshness == DataFreshness.live
-        ? AppStrings.translate('Live • Synced just now', settings.isHindi)
+        ? AppStrings.translate('Live • Synced just now', settings.language)
         : freshness == DataFreshness.stale
             ? 'Stale • Synced $ago'
             : 'Offline Ready • Synced $ago';
@@ -502,7 +515,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
               icon: const Icon(Icons.mic, size: 16),
-              label: Text(AppStrings.translate('Ask AI', settings.isHindi), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              label: Text(AppStrings.translate('Ask AI', settings.language), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -518,13 +531,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final String message;
     final String tag;
     if (topAlert != null) {
-      title = topAlert.title as String;
-      message = topAlert.message as String;
-      tag = '${topAlert.severity.toString().toUpperCase()} • ${topAlert.type.toString().toUpperCase()} ALERT';
+      title = AppStrings.translate(topAlert.title as String, context.read<AppSettingsProvider>().language);
+      message = AppStrings.translate(topAlert.message as String, context.read<AppSettingsProvider>().language);
+      tag = AppStrings.translate('${topAlert.severity.toString().toUpperCase()} • ${topAlert.type.toString().toUpperCase()} ALERT', context.read<AppSettingsProvider>().language);
     } else {
-      title = 'Whitefly Infestation Detected Nearby';
-      message = 'Active in North Cotton field — apply organic neem spray before 5:00 PM to secure boll formation.';
-      tag = 'HIGH SEVERITY • PEST ALERT';
+      title = AppStrings.translate('Whitefly Infestation Detected Nearby', context.read<AppSettingsProvider>().language);
+      message = AppStrings.translate('Active in North Cotton field — apply organic neem spray before 5:00 PM to secure boll formation.', context.read<AppSettingsProvider>().language);
+      tag = AppStrings.translate('HIGH SEVERITY • PEST ALERT', context.read<AppSettingsProvider>().language);
     }
     return Container(
       padding: const EdgeInsets.all(16),
@@ -565,7 +578,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text('20 mins ago', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+              Text(AppStrings.translate('20 mins ago', context.read<AppSettingsProvider>().language), style: const TextStyle(fontSize: 12, color: AppColors.textTertiary)),
             ],
           ),
           const SizedBox(height: 12),
@@ -596,12 +609,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(Icons.medical_services_outlined, size: 18),
-                  SizedBox(width: 8),
-                  Text('View Treatment Plan', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 18),
+                children: [
+                  const Icon(Icons.medical_services_outlined, size: 18),
+                  const SizedBox(width: 8),
+                  Text(AppStrings.translate('View Treatment Plan', context.read<AppSettingsProvider>().language), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_forward, size: 18),
                 ],
               ),
             ),
@@ -615,21 +628,24 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        Text(AppStrings.translate(title, context.read<AppSettingsProvider>().language), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         if (actionText != null)
           InkWell(
             onTap: onActionTap,
-            child: Text(actionText, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryGreen)),
+            child: Text(AppStrings.translate(actionText, context.read<AppSettingsProvider>().language), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryGreen)),
           ),
       ],
     );
   }
 
   Widget _buildSensorsGrid(Reading? reading) {
+    final lang = context.read<AppSettingsProvider>().language;
     final moisture = reading != null ? '${reading.soilMoisturePct.toStringAsFixed(0)}%' : '64%';
     final temp = reading != null ? '${reading.temperatureC.toStringAsFixed(0)}°C' : '31°C';
     final humidity = reading != null ? '${reading.humidityPct.toStringAsFixed(0)}%' : '58%';
+
     final moistureOk = reading == null || reading.soilMoisturePct >= 40;
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -639,42 +655,42 @@ class _HomeScreenState extends State<HomeScreen> {
       childAspectRatio: 1.2,
       children: [
         _buildSensorCard(
-          title: 'Moisture',
+          title: AppStrings.translate('Moisture', lang),
           value: moisture,
-          statusText: moistureOk ? 'Root Optimal' : 'Needs Water',
+          statusText: AppStrings.translate(moistureOk ? 'Root Optimal' : 'Needs Water', lang),
           statusColor: moistureOk ? AppColors.primaryGreen : AppColors.severityCritical,
           statusBgColor: moistureOk ? AppColors.cardGreenBg : AppColors.severityCriticalBg,
           iconData: Icons.water_drop,
           iconColor: Colors.blue[300]!,
           iconBg: Colors.blue[50]!,
-          onTap: () => _showSensorDetailDialog(context, 'Soil Moisture', moisture, moistureOk ? 'Optimal' : 'Deficit'),
+          onTap: () => _showSensorDetailDialog(context, AppStrings.translate('Soil Moisture', lang), moisture, AppStrings.translate(moistureOk ? 'Optimal' : 'Deficit', lang)),
         ),
         _buildSensorCard(
-          title: 'Temp',
+          title: AppStrings.translate('Temp', lang),
           value: temp,
-          statusText: 'Clear Skies',
+          statusText: AppStrings.translate('Clear Skies', lang),
           statusColor: AppColors.textSecondary,
           statusBgColor: Colors.grey[200]!,
           iconData: Icons.thermostat,
           iconColor: Colors.orange[700]!,
           iconBg: Colors.orange[50]!,
-          onTap: () => _showSensorDetailDialog(context, 'Air Temperature', temp, 'Normal'),
+          onTap: () => _showSensorDetailDialog(context, AppStrings.translate('Air Temperature', lang), temp, AppStrings.translate('Normal', lang)),
         ),
         _buildSensorCard(
-          title: 'Humidity',
+          title: AppStrings.translate('Humidity', lang),
           value: humidity,
-          statusText: 'Good Spray',
+          statusText: AppStrings.translate('Good Spray', lang),
           statusColor: Colors.white,
           statusBgColor: const Color(0xFF5EE085),
           iconData: Icons.air,
           iconColor: AppColors.primaryGreen,
           iconBg: AppColors.cardGreenBg,
-          onTap: () => _showSensorDetailDialog(context, 'Air Humidity', humidity, 'Ideal Spray Conditions'),
+          onTap: () => _showSensorDetailDialog(context, AppStrings.translate('Air Humidity', lang), humidity, AppStrings.translate('Ideal Spray Conditions', lang)),
         ),
         _buildSensorCard(
-          title: 'Irrigation',
-          value: '6:00 PM',
-          statusText: '45m Cycle',
+          title: AppStrings.translate('Irrigation', lang),
+          value: AppStrings.translate('6:00 PM', lang),
+          statusText: AppStrings.translate('45m Cycle', lang),
           statusColor: AppColors.textSecondary,
           statusBgColor: const Color(0xFFE8F0FE),
           iconData: Icons.water,
@@ -806,7 +822,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            AppStrings.translate(settings.userCrops.isNotEmpty ? settings.userCrops.first : 'Cotton Field Plot A', settings.isHindi),
+                            AppStrings.translate(settings.userCrops.isNotEmpty ? settings.userCrops.first : 'Cotton Field Plot A', settings.language),
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -877,7 +893,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(AppStrings.translate('Scheduled Irrigation', settings.isHindi), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                Text(AppStrings.translate('Scheduled Irrigation', settings.language), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 const SizedBox(height: 4),
                 const Text('Next cycle at 05:30 PM (Zone 2)', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               ],

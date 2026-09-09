@@ -29,3 +29,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    - assets/images/logo.png
+    - assets/images/onboarding_sensors.png
+    - assets/images/onboarding_scan.png
+    - assets/images/onboarding_irrigation.png
+    - assets/images/onboarding_language.png
+    - assets/images/farmer_avatar.png

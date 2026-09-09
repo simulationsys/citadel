@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'app_language.dart';
+
 class AppSettingsProvider extends ChangeNotifier {
-  bool _isHindi = false;
+  AppLanguage _language = AppLanguage.english;
+  bool _hasSeenOnboarding = false;
   String _userName = 'Ramesh Kumar';
   String? _profileImagePath;
   String _userLocation = 'Rohtak, Haryana';
@@ -36,7 +39,12 @@ class AppSettingsProvider extends ChangeNotifier {
     'Tea / Coffee',
   ];
 
-  bool get isHindi => _isHindi;
+  AppLanguage get language => _language;
+  bool get hasSeenOnboarding => _hasSeenOnboarding;
+
+  /// Deprecated: use [language] instead. Kept for backward compatibility
+  /// during migration of translate() call sites.
+  bool get isHindi => _language == AppLanguage.hindi;
   String get userName => _userName;
   String? get profileImagePath => _profileImagePath;
   String get userLocation => _userLocation;
@@ -45,7 +53,19 @@ class AppSettingsProvider extends ChangeNotifier {
 
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    _isHindi = prefs.getBool('isHindi') ?? false;
+
+    // Migrate legacy 'isHindi' bool → new 'appLanguage' string.
+    final legacyHindi = prefs.getBool('isHindi');
+    final savedLang = prefs.getString('appLanguage');
+    if (savedLang != null) {
+      _language = AppLanguage.fromStorageKey(savedLang);
+    } else if (legacyHindi == true) {
+      _language = AppLanguage.hindi;
+      await prefs.setString('appLanguage', _language.storageKey);
+      await prefs.remove('isHindi');
+    }
+
+    _hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
     _userName = prefs.getString('userName') ?? 'Ramesh Kumar';
     _profileImagePath = prefs.getString('profileImagePath');
     _userLocation = prefs.getString('userLocation') ?? 'Rohtak, Haryana';
@@ -57,11 +77,36 @@ class AppSettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleLanguage() async {
-    _isHindi = !_isHindi;
+  /// Mark onboarding as completed. Persists so it won't show again.
+  Future<void> completeOnboarding() async {
+    _hasSeenOnboarding = true;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isHindi', _isHindi);
+    await prefs.setBool('hasSeenOnboarding', true);
     notifyListeners();
+  }
+
+  /// Reset onboarding status.
+  Future<void> resetOnboarding() async {
+    _hasSeenOnboarding = false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasSeenOnboarding', false);
+    notifyListeners();
+  }
+
+  /// Set the app language. Persists the choice to SharedPreferences.
+  Future<void> setLanguage(AppLanguage lang) async {
+    _language = lang;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('appLanguage', lang.storageKey);
+    notifyListeners();
+  }
+
+  /// Deprecated: use [setLanguage] instead. Kept for backward compat.
+  Future<void> toggleLanguage() async {
+    final next = _language == AppLanguage.english
+        ? AppLanguage.hindi
+        : AppLanguage.english;
+    await setLanguage(next);
   }
 
   Future<void> updateProfile({

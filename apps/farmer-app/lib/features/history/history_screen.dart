@@ -5,6 +5,7 @@ import '../../core/config/app_settings_provider.dart';
 import '../../core/config/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/profile_avatar_button.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -223,10 +224,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   children: [
                     Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.primaryGreen, shape: BoxShape.circle)),
                     const SizedBox(width: 4),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Online • Synced',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                        AppStrings.translate('Online • Synced', context.read<AppSettingsProvider>().language),
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -252,20 +253,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             onPressed: () => _showMicDialog(context),
           ),
         ),
-        InkWell(
-          onTap: () => Navigator.pushNamed(context, '/profile'),
-          child: Container(
-            margin: const EdgeInsets.only(right: 16, left: 12),
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            alignment: Alignment.center,
-            child: const Text('img', style: TextStyle(fontSize: 10, color: Colors.black54)),
-          ),
-        ),
+        const ProfileAvatarButton(margin: EdgeInsets.only(right: 16, left: 12)),
       ],
     );
   }
@@ -286,12 +274,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppStrings.translate('Alerts & Advisory History', settings.isHindi),
+                      AppStrings.translate('Alerts & Advisory History', settings.language),
                       style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      AppStrings.translate('Farm decisions and action log', settings.isHindi),
+                      AppStrings.translate('Farm decisions and action log', settings.language),
                       style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
                     ),
                   ],
@@ -323,7 +311,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   onTap: () => setState(() => _selectedFilter = 'High Severity'),
                   child: _buildSummaryChip(
                     count: '3',
-                    label: AppStrings.translate('Active Alerts', settings.isHindi),
+                    label: AppStrings.translate('Active Alerts', settings.language),
                     color: AppColors.severityCritical,
                     bgColor: AppColors.severityCriticalBg,
                   ),
@@ -335,7 +323,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   onTap: () => setState(() => _selectedFilter = 'All'),
                   child: _buildSummaryChip(
                     count: '14',
-                    label: AppStrings.translate('Resolved', settings.isHindi),
+                    label: AppStrings.translate('Resolved', settings.language),
                     color: AppColors.primaryGreen,
                     bgColor: AppColors.cardGreenBg,
                   ),
@@ -347,7 +335,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   onTap: () => setState(() => _selectedFilter = 'All'),
                   child: _buildSummaryChip(
                     icon: Icons.verified_user_outlined,
-                    label: AppStrings.translate('Protected', settings.isHindi),
+                    label: AppStrings.translate('Protected', settings.language),
                     color: AppColors.textPrimary,
                     bgColor: const Color(0xFFE8F0FE),
                   ),
@@ -364,11 +352,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              _buildFilterChip(AppStrings.translate('All', settings.isHindi), Icons.done_all, AppColors.primaryGreen, Colors.white, _selectedFilter == 'All'),
+              _buildFilterChip(AppStrings.translate('All', settings.language), Icons.done_all, AppColors.primaryGreen, Colors.white, _selectedFilter == 'All'),
               const SizedBox(width: 8),
-              _buildFilterChip(AppStrings.translate('High Severity', settings.isHindi), Icons.warning_amber_rounded, AppColors.severityCritical, AppColors.textPrimary, _selectedFilter == 'High Severity'),
+              _buildFilterChip(AppStrings.translate('High Severity', settings.language), Icons.warning_amber_rounded, AppColors.severityCritical, AppColors.textPrimary, _selectedFilter == 'High Severity'),
               const SizedBox(width: 8),
-              _buildFilterChip(AppStrings.translate('Irrigation', settings.isHindi), Icons.water_drop_outlined, Colors.blue, AppColors.textPrimary, _selectedFilter == 'Irrigation'),
+              _buildFilterChip(AppStrings.translate('Irrigation', settings.language), Icons.water_drop_outlined, Colors.blue, AppColors.textPrimary, _selectedFilter == 'Irrigation'),
             ],
           ),
         ),
@@ -476,7 +464,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
-                                    AppStrings.translate('High Severity', settings.isHindi),
+                                    AppStrings.translate('High Severity', settings.language),
                                     style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -486,17 +474,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Text(AppStrings.translate('Today 8:30 AM', settings.isHindi), style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+                        Text(AppStrings.translate('Today 8:30 AM', settings.language), style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      AppStrings.translate('Whitefly Outbreak (North Plot)', settings.isHindi),
+                      AppStrings.translate('Whitefly Outbreak (North Plot)', settings.language),
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
-                    Text(AppStrings.translate('Action Pending', settings.isHindi), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.severityCritical)),
+                    Text(AppStrings.translate('Action Pending', settings.language), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.severityCritical)),
                   ],
                 ),
               ),
@@ -515,7 +503,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(AppStrings.translate('View Dosage', settings.isHindi), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(AppStrings.translate('View Dosage', settings.language), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
                   const Icon(Icons.arrow_forward, size: 16),
                 ],
@@ -561,13 +549,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             decoration: BoxDecoration(color: const Color(0xFFE8F0FE), borderRadius: BorderRadius.circular(12)),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.water_drop_outlined, color: AppColors.primaryGreen, size: 12),
-                                SizedBox(width: 4),
+                              children: [
+                                const Icon(Icons.water_drop_outlined, color: AppColors.primaryGreen, size: 12),
+                                const SizedBox(width: 4),
                                 Flexible(
                                   child: Text(
-                                    'Irrigation Required',
-                                    style: TextStyle(color: AppColors.primaryGreen, fontSize: 10, fontWeight: FontWeight.bold),
+                                    AppStrings.translate('Irrigation Required', context.read<AppSettingsProvider>().language),
+                                    style: const TextStyle(color: AppColors.primaryGreen, fontSize: 10, fontWeight: FontWeight.bold),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
@@ -576,27 +564,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Text(
-                          'Yesterday 6:15 PM',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.bold),
+                        Text(
+                          AppStrings.translate('Yesterday 6:15 PM', context.read<AppSettingsProvider>().language),
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      'Low Soil Moisture (Plot A)',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    Text(
+                      AppStrings.translate('Low Soil Moisture (Plot A)', context.read<AppSettingsProvider>().language),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Row(
-                      children: const [
-                        Icon(Icons.check_circle_outline, color: AppColors.primaryGreen, size: 16),
-                        SizedBox(width: 4),
+                      children: [
+                        const Icon(Icons.check_circle_outline, color: AppColors.primaryGreen, size: 16),
+                        const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            'Approved & Completed (45m drip)',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                            AppStrings.translate('Approved & Completed (45m drip)', context.read<AppSettingsProvider>().language),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -615,18 +603,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
               decoration: BoxDecoration(color: const Color(0xFFF4F6FF), borderRadius: BorderRadius.circular(8)),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Expanded(
                     child: Text(
-                      'Plot moisture restored to 68%\noptimal',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
+                      AppStrings.translate('Plot moisture restored to 68%\noptimal', context.read<AppSettingsProvider>().language),
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    'Sensor\nLog',
+                    AppStrings.translate('Sensor\nLog', context.read<AppSettingsProvider>().language),
                     textAlign: TextAlign.right,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                   ),
                 ],
               ),
@@ -670,27 +658,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           decoration: BoxDecoration(color: AppColors.severityWarningBg, borderRadius: BorderRadius.circular(12)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(Icons.cloud, color: AppColors.severityWarning, size: 12),
-                              SizedBox(width: 4),
-                              Text('Weather Alert', style: TextStyle(color: AppColors.severityWarning, fontSize: 10, fontWeight: FontWeight.bold)),
+                            children: [
+                              const Icon(Icons.cloud, color: AppColors.severityWarning, size: 12),
+                              const SizedBox(width: 4),
+                              Text(AppStrings.translate('Weather Alert', context.read<AppSettingsProvider>().language), style: const TextStyle(color: AppColors.severityWarning, fontSize: 10, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
-                        const Text('3 days ago', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+                        Text(AppStrings.translate('3 days ago', context.read<AppSettingsProvider>().language), style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    const Text('Heavy Rain Forecast (40mm)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    Text(AppStrings.translate('Heavy Rain Forecast (40mm)', context.read<AppSettingsProvider>().language), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                     const SizedBox(height: 4),
                     Row(
-                      children: const [
-                        Icon(Icons.savings_outlined, color: AppColors.severityWarning, size: 16),
-                        SizedBox(width: 4),
+                      children: [
+                        const Icon(Icons.savings_outlined, color: AppColors.severityWarning, size: 16),
+                        const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            'Chemical spray postponed • Saved \$45',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                            AppStrings.translate('Chemical spray postponed • Saved \$45', context.read<AppSettingsProvider>().language),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -711,10 +699,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 decoration: BoxDecoration(color: const Color(0xFFF4F6FF), borderRadius: BorderRadius.circular(8)),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text('View Weather Radar', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                    SizedBox(width: 6),
-                    Icon(Icons.open_in_new, size: 14, color: AppColors.textPrimary),
+                  children: [
+                    Text(AppStrings.translate('View Weather Radar', context.read<AppSettingsProvider>().language), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.open_in_new, size: 14, color: AppColors.textPrimary),
                   ],
                 ),
               ),
@@ -758,27 +746,27 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           decoration: BoxDecoration(color: const Color(0xFFF4F6FF), borderRadius: BorderRadius.circular(12)),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(Icons.science, color: AppColors.textSecondary, size: 12),
-                              SizedBox(width: 4),
-                              Text('Nutrient Management', style: TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.bold)),
+                            children: [
+                              const Icon(Icons.science, color: AppColors.textSecondary, size: 12),
+                              const SizedBox(width: 4),
+                              Text(AppStrings.translate('Nutrient Management', context.read<AppSettingsProvider>().language), style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
-                        const Text('5 days ago', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
+                        Text(AppStrings.translate('5 days ago', context.read<AppSettingsProvider>().language), style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     const SizedBox(height: 6),
-                    const Text('Nitrogen Top Dressing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    Text(AppStrings.translate('Nitrogen Top Dressing', context.read<AppSettingsProvider>().language), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                     const SizedBox(height: 4),
                     Row(
-                      children: const [
-                        Icon(Icons.trending_up, color: AppColors.primaryGreen, size: 16),
-                        SizedBox(width: 4),
+                      children: [
+                        const Icon(Icons.trending_up, color: AppColors.primaryGreen, size: 16),
+                        const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            'Completed (Urea applied) • NDVI +8%',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
+                            AppStrings.translate('Completed (Urea applied) • NDVI +8%', context.read<AppSettingsProvider>().language),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),

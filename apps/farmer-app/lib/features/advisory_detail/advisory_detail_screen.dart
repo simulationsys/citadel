@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/profile_avatar_button.dart';
 
 class AdvisoryDetailScreen extends StatefulWidget {
   const AdvisoryDetailScreen({super.key});
@@ -177,20 +178,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
             onPressed: () => _showMicDialog(context),
           ),
         ),
-        InkWell(
-          onTap: () => Navigator.pushNamed(context, '/profile'),
-          child: Container(
-            margin: const EdgeInsets.only(right: 16, left: 12),
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            alignment: Alignment.center,
-            child: const Text('img', style: TextStyle(fontSize: 10, color: Colors.black54)),
-          ),
-        ),
+        const ProfileAvatarButton(margin: EdgeInsets.only(right: 16, left: 12)),
       ],
     );
   }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/models/crop_health_result.dart';
+import '../../widgets/profile_avatar_button.dart';
 
 class ScanResultScreen extends StatelessWidget {
   final File? imageFile;
@@ -24,18 +25,8 @@ class ScanResultScreen extends StatelessWidget {
         ),
         title: const Text('Scan Result Details', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Text('img', style: TextStyle(fontSize: 10)),
-          ),
+        actions: const [
+          ProfileAvatarButton(size: 32),
         ],
       ),
       body: SingleChildScrollView(

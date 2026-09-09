@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/config/app_language.dart';
+import '../../core/config/app_settings_provider.dart';
 import '../../core/config/edge_config.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
@@ -20,7 +22,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _urlController;
   late TextEditingController _zoneController;
-  String _language = 'English';
+  AppLanguage _language = AppLanguage.english;
   String? _connectionStatus;
   bool _isTesting = false;
   bool _isSaving = false;
@@ -33,6 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final edge = context.read<EdgeConfig>();
       _urlController = TextEditingController(text: edge.baseUrl);
       _zoneController = TextEditingController(text: edge.zoneId);
+      _language = context.read<AppSettingsProvider>().language;
       _init = true;
     }
   }
@@ -56,21 +59,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Card(
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: RadioGroup<String>(
+              child: RadioGroup<AppLanguage>(
                 groupValue: _language,
-                onChanged: (String? v) { if (v != null) setState(() => _language = v); },
+                onChanged: (AppLanguage? v) {
+                  if (v != null) {
+                    setState(() => _language = v);
+                    context.read<AppSettingsProvider>().setLanguage(v);
+                  }
+                },
                 child: Column(
                   children: [
-                    RadioListTile<String>(
-                      title: const Text('English'),
-                      value: 'English',
-                      toggleable: false,
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('हिन्दी (Hindi)'),
-                      value: 'Hindi',
-                      toggleable: false,
-                    ),
+                    for (final lang in AppLanguage.values)
+                      RadioListTile<AppLanguage>(
+                        title: Text(lang.displayLabel),
+                        value: lang,
+                        toggleable: false,
+                      ),
                   ],
                 ),
               ),

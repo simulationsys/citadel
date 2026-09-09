@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+
+import 'core/config/app_settings_provider.dart';
 
 import 'core/theme/app_colors.dart';
 import 'features/home/home_screen.dart';
@@ -8,12 +11,15 @@ import 'features/scan/scan_screen.dart';
 import 'features/history/history_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/profile/profile_screen.dart';
+import 'features/onboarding/onboarding_screen.dart';
+import 'features/splash/splash_screen.dart';
 
 class CitadelApp extends StatelessWidget {
   const CitadelApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    context.watch<AppSettingsProvider>();
     return MaterialApp(
       title: 'Citadel Farm',
       debugShowCheckedModeBanner: false,
@@ -57,9 +63,11 @@ class CitadelApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: '/',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (_) => const SplashScreen(),
         '/': (_) => const HomeScreen(),
+        '/onboarding': (_) => const OnboardingScreen(),
         '/advisory-detail': (_) => const AdvisoryDetailScreen(),
         '/scan': (_) => const ScanScreen(),
         '/history': (_) => const HistoryScreen(),

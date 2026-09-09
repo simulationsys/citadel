@@ -9,6 +9,7 @@ import '../../core/config/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/crop_health_result.dart';
 import '../../data/repositories/farm_state_repository.dart';
+import '../../widgets/profile_avatar_button.dart';
 import 'scan_result_screen.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -53,7 +54,7 @@ class _ScanScreenState extends State<ScanScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              AppStrings.translate('Select Active Crop', settings.isHindi),
+              AppStrings.translate('Select Active Crop', settings.language),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
@@ -63,7 +64,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 itemCount: cropsList.length,
                 itemBuilder: (context, index) {
                   final cropName = cropsList[index];
-                  final translatedCrop = AppStrings.translate(cropName, settings.isHindi);
+                  final translatedCrop = AppStrings.translate(cropName, settings.language);
                   return ListTile(
                     leading: const Icon(Icons.eco, color: AppColors.primaryGreen),
                     title: Text(translatedCrop),
@@ -93,17 +94,17 @@ class _ScanScreenState extends State<ScanScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
           const SizedBox(height: 20),
-          Row(children: [const Icon(Icons.lightbulb_rounded, color: Colors.amber), const SizedBox(width: 10), Expanded(child: Text(AppStrings.translate('Scanning Best Practices', settings.isHindi), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)))]),
+          Row(children: [const Icon(Icons.lightbulb_rounded, color: Colors.amber), const SizedBox(width: 10), Expanded(child: Text(AppStrings.translate('Scanning Best Practices', settings.language), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)))]),
           const SizedBox(height: 16),
-          Text(AppStrings.translate('1. Focus on affected leaves showing discoloration or spots.', settings.isHindi)),
+          Text(AppStrings.translate('1. Focus on affected leaves showing discoloration or spots.', settings.language)),
           const SizedBox(height: 10),
-          Text(AppStrings.translate('2. Keep distance at 15-20 cm from plant surface.', settings.isHindi)),
+          Text(AppStrings.translate('2. Keep distance at 15-20 cm from plant surface.', settings.language)),
           const SizedBox(height: 10),
-          Text(AppStrings.translate('3. Ensure clear daylight or turn on Flash in low light.', settings.isHindi)),
+          Text(AppStrings.translate('3. Ensure clear daylight or turn on Flash in low light.', settings.language)),
           const SizedBox(height: 10),
-          Text(AppStrings.translate('4. Keep camera steady for accurate AI confidence rating.', settings.isHindi)),
+          Text(AppStrings.translate('4. Keep camera steady for accurate AI confidence rating.', settings.language)),
           const SizedBox(height: 20),
-          ElevatedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(AppStrings.translate('Got it!', settings.isHindi))),
+          ElevatedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(AppStrings.translate('Got it!', settings.language))),
         ]),
       ),
     );
@@ -210,6 +211,7 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   AppBar _buildAppBar() {
+    final lang = context.read<AppSettingsProvider>().language;
     return AppBar(
       backgroundColor: AppColors.background,
       elevation: 0,
@@ -217,27 +219,17 @@ class _ScanScreenState extends State<ScanScreen> {
         icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
         onPressed: () => Navigator.pop(context),
       ),
-      title: const Text(
-        'Crop Scanner',
-        style: TextStyle(
+      title: Text(
+        AppStrings.translate('Crop Scanner', lang),
+        style: const TextStyle(
           color: AppColors.textPrimary,
           fontWeight: FontWeight.bold,
           fontSize: 18,
         ),
       ),
       centerTitle: true,
-      actions: [
-        InkWell(
-          onTap: () => Navigator.pushNamed(context, '/profile'),
-          child: Container(
-            margin: const EdgeInsets.only(right: 16),
-            width: 32,
-            height: 32,
-            color: Colors.grey[300],
-            alignment: Alignment.center,
-            child: const Text('img', style: TextStyle(fontSize: 10)),
-          ),
-        ),
+      actions: const [
+        ProfileAvatarButton(size: 32),
       ],
     );
   }
@@ -277,7 +269,7 @@ class _ScanScreenState extends State<ScanScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Single Leaf',
+                              AppStrings.translate('Single Leaf', settings.language),
                               style: TextStyle(
                                 color: _isSingleLeafMode ? Colors.white : AppColors.textSecondary,
                                 fontWeight: FontWeight.bold,
@@ -306,7 +298,7 @@ class _ScanScreenState extends State<ScanScreen> {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Field Spot',
+                              AppStrings.translate('Field Spot', settings.language),
                               style: TextStyle(
                                 color: !_isSingleLeafMode ? Colors.white : AppColors.textSecondary,
                                 fontWeight: FontWeight.bold,
@@ -357,7 +349,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  AppStrings.translate('ACTIVE CROP:', settings.isHindi),
+                  AppStrings.translate('ACTIVE CROP:', settings.language),
                   style: const TextStyle(
                     fontSize: 10,
                     color: AppColors.textSecondary,
@@ -367,7 +359,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    AppStrings.translate(_selectedCrop, settings.isHindi),
+                    AppStrings.translate(_selectedCrop, settings.language),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -380,7 +372,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 InkWell(
                   onTap: _showCropPicker,
                   child: Text(
-                    AppStrings.translate('Change', settings.isHindi),
+                    AppStrings.translate('Change', settings.language),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -423,7 +415,10 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _isSingleLeafMode ? 'AI Scanner Ready • Good Lighting' : 'Field Spot Mode Active',
+                    AppStrings.translate(
+                      _isSingleLeafMode ? 'AI Scanner Ready • Good Lighting' : 'Field Spot Mode Active',
+                      context.read<AppSettingsProvider>().language,
+                    ),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -466,9 +461,9 @@ class _ScanScreenState extends State<ScanScreen> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Text(
-                          'Spot Found',
-                          style: TextStyle(
+                        Text(
+                          AppStrings.translate('Spot Found', context.read<AppSettingsProvider>().language),
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -516,7 +511,10 @@ class _ScanScreenState extends State<ScanScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    _isSingleLeafMode ? 'Align damaged leaf area inside frame' : 'Align field crop section inside frame',
+                    AppStrings.translate(
+                      _isSingleLeafMode ? 'Align damaged leaf area inside frame' : 'Align field crop section inside frame',
+                      context.read<AppSettingsProvider>().language,
+                    ),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -534,7 +532,7 @@ class _ScanScreenState extends State<ScanScreen> {
           right: 0,
           child: Center(
             child: Text(
-              'Hold steady for instant diagnosis',
+              AppStrings.translate('Hold steady for instant diagnosis', context.read<AppSettingsProvider>().language),
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.8),
                 fontSize: 12,
@@ -580,7 +578,7 @@ class _ScanScreenState extends State<ScanScreen> {
             children: [
               Expanded(child: _buildControlButton(
                 Icons.photo_library,
-                'Gallery',
+                AppStrings.translate('Gallery', context.read<AppSettingsProvider>().language),
                 () => _pickImage(ImageSource.gallery),
               )),
               Expanded(child: Center(child: GestureDetector(
@@ -606,7 +604,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                 ),
               ))),
-              Expanded(child: _buildControlButton(Icons.lightbulb_outline, 'Tips', _showTipsDialog)),
+              Expanded(child: _buildControlButton(Icons.lightbulb_outline, AppStrings.translate('Tips', context.read<AppSettingsProvider>().language), _showTipsDialog)),
             ],
           ),
           const SizedBox(height: 24),
@@ -634,19 +632,19 @@ class _ScanScreenState extends State<ScanScreen> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
+                    children: [
                       Text(
-                        'Field Tip: Natural Sun Angle',
-                        style: TextStyle(
+                        AppStrings.translate('Field Tip: Natural Sun Angle', context.read<AppSettingsProvider>().language),
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
-                        'Keep the sun behind your phone for optimal clarity.',
-                        style: TextStyle(
+                        AppStrings.translate('Keep the sun behind your phone for optimal clarity.', context.read<AppSettingsProvider>().language),
+                        style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
                         ),
