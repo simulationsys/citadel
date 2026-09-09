@@ -91,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Phone and laptop must be on the same Wi-Fi. Use the laptop IPv4, e.g. http://192.168.1.10:3001',
+                    'Phone and Raspberry Pi must be on the same Wi-Fi. Use the Pi\'s IPv4, e.g. http://192.168.1.31:3001',
                     style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 12),

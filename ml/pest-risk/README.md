@@ -19,10 +19,12 @@ python -m src.main --reading fixtures/dry_heat.json --pest fixtures/whitefly_act
 python -m unittest discover -s tests -v
 ```
 
-The CLI prints the JSON contract the edge API can store and return. Risk evaluation has no runtime third-party dependency. The local HTTP service can be run after `pip install -r requirements.txt`:
+The CLI prints the JSON contract the edge API can store and return. Risk evaluation has no runtime third-party dependency. Create an isolated environment and install the API and model dependencies:
 
 ```powershell
-uvicorn src.api:app --host 0.0.0.0 --port 8001
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-model.txt
+.\.venv\Scripts\python.exe -m uvicorn src.api:app --host 0.0.0.0 --port 8001
 ```
 
 Open `http://localhost:8001/docs` to test the service. `pest_inference.py` supports TensorFlow Lite SSD-style models with an image supplied as base64. It intentionally reports `503 model_not_ready` until a real `.tflite` model and labels file are supplied.
@@ -37,10 +39,11 @@ Input: a sensor reading and optional pest result. Output: a list of advisories w
 - `GET /v1/profiles` — supported crop-risk profiles
 - `POST /v1/risk/evaluate` — evaluate readings and optional pest observations
 - `POST /v1/pest/analyze` — run the loaded local TFLite model over an image and return observations
+- `POST /v1/crop-health/analyze` — validate image quality and run the bundled tomato-health classifier
 - `POST /v1/farm-state` — analyze pest observations/image plus readings in one request
 
 ## Model handoff
 
 Place an exported `pest_detector.tflite` and matching `labels.txt` in `models/` or set `CITADEL_PEST_MODEL` and `CITADEL_PEST_LABELS`. The service does not pretend that a model is available when it is not. Verify output-tensor ordering against the selected model with real validation images before deploying it to a farm.
 
-For development model inference, install `requirements-model.txt` after the core requirements. On a Raspberry Pi, prefer the compatible `tflite-runtime` wheel rather than the full TensorFlow package.
+Image requests use base64-encoded JPEG/PNG bytes without a data-URI prefix and are limited to 5 MB. On a Raspberry Pi, prefer the compatible `tflite-runtime` wheel rather than the full TensorFlow package.

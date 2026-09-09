@@ -13,12 +13,15 @@ import 'farm_state_repository.dart';
 /// HTTP implementation that talks to the edge API over the LAN so a physical
 /// phone can stay "connected with phone".
 ///
-/// Endpoints used (see `services/edge-api/src/index.js`):
+/// Endpoints used (see `services/edge-api/app/main.py` — the consolidated
+/// Python edge API on port 3001, per docs/backend-integration.md's target
+/// architecture; `apps/dashboard/backend` was deleted once this landed):
 /// - `GET /health`
 /// - `GET /v1/farm-state?zoneId=<zone>`
 /// - `POST /v1/readings` (not used by UI yet)
-/// - `POST /v1/crop-health?zoneId=<zone>` (raw JPEG bytes)
-/// - `POST /v1/irrigation/requests` + `POST /v1/irrigation/requests/:id/approve`
+/// - `POST /v1/crop-health?zoneId=<zone>` (multipart `image` field, runs the real crop-health AI model)
+/// - `POST /v1/irrigation/requests` + `POST /v1/irrigation/requests/:id/approve` + `.../decline`
+///   (records intent, then a human approval is the only thing that turns the pump on)
 ///
 /// Offline-first: the last good `FarmState` JSON is cached in
 /// SharedPreferences. On fetch failure the cached state is returned instead
@@ -97,12 +100,14 @@ class HttpFarmStateRepository implements FarmStateRepository {
 
   @override
   Future<CropHealthResult> submitImage(File image) async {
-    final bytes = await image.readAsBytes();
+    // Edge API expects multipart/form-data with an `image` file field
+    // (FastAPI `UploadFile = File(...)`), not a raw-bytes body.
     final uri = Uri.parse('$_root/v1/crop-health?zoneId=$zoneId');
     try {
-      final res = await http
-          .post(uri, headers: {'Content-Type': 'image/jpeg'}, body: bytes)
-          .timeout(const Duration(seconds: 30));
+      final request = http.MultipartRequest('POST', uri)
+        ..files.add(await http.MultipartFile.fromPath('image', image.path));
+      final streamed = await request.send().timeout(const Duration(seconds: 30));
+      final res = await http.Response.fromStream(streamed);
       if (res.statusCode == 200) {
         return CropHealthResult.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
       }
@@ -122,8 +127,10 @@ class HttpFarmStateRepository implements FarmStateRepository {
 
   @override
   Future<void> approveIrrigation(String action, {required bool approved}) async {
-    // Record an irrigation request; approval endpoint needs a request id, so
-    // we create-then-approve. Failures are swallowed (queued offline).
+    // Records an irrigation request, then approves or declines it — the pump
+    // only ever turns on because a human approved a specific request
+    // (services/edge-api/app/main.py `/v1/irrigation/requests[...]`).
+    // Failures are swallowed (queued offline, MVP behaviour).
     try {
       final createUri = Uri.parse('$_root/v1/irrigation/requests');
       final created = await http
@@ -134,14 +141,14 @@ class HttpFarmStateRepository implements FarmStateRepository {
       if (created.statusCode != 201) return;
       final id = (jsonDecode(created.body) as Map)['request']?['id'] as String?;
       if (id == null) return;
-      if (approved) {
-        final approveUri = Uri.parse('$_root/v1/irrigation/requests/$id/approve');
-        await http
-            .post(approveUri,
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode({'approvedBy': 'farmer'}))
-            .timeout(timeout);
-      }
+
+      final decisionUri = Uri.parse(
+          '$_root/v1/irrigation/requests/$id/${approved ? 'approve' : 'decline'}');
+      await http
+          .post(decisionUri,
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({'approvedBy': 'farmer'}))
+          .timeout(timeout);
     } catch (_) {
       // Offline — action stays queued locally (no-op for MVP).
     }

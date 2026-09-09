@@ -28,7 +28,8 @@ class PestDetector:
             from tflite_runtime.interpreter import Interpreter  # type: ignore
         except ImportError:
             try:
-                from tensorflow.lite import Interpreter  # type: ignore
+                from tensorflow import lite  # type: ignore
+                Interpreter = lite.Interpreter
             except ImportError as error:
                 raise ModelUnavailable("Install tensorflow or tflite-runtime to use pest inference.") from error
         self.interpreter = Interpreter(model_path=str(self.model_path))
