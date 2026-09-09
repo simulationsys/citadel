@@ -6,7 +6,7 @@ class AppConstants {
   /// Points at the consolidated Python edge API on port 3001
   /// (services/edge-api) — the target architecture from
   /// docs/backend-integration.md, now the only backend in the repo.
-  static const String defaultEdgeApiUrl = 'http://192.168.1.31:3001';
+  static const String defaultEdgeApiUrl = 'http://192.168.1.11:3001';
 
   /// Polling interval for farm state refresh.
   /// Match the ESP32's 10-second reporting interval so a physical sensor

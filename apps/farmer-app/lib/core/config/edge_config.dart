@@ -7,9 +7,8 @@ import '../constants/app_constants.dart';
 /// Wi-Fi as the laptop/edge node can talk to it.
 ///
 /// Persisted in SharedPreferences under `edge_base_url` / `edge_zone_id`.
-/// Defaults to [AppConstants.defaultEdgeApiUrl] (`http://localhost:3001`,
-/// which works on emulators; on a real phone set e.g.
-/// `http://192.168.1.10:3001` via Settings).
+/// Defaults to [AppConstants.defaultEdgeApiUrl]. The phone must use the Pi's
+/// LAN address; `localhost` would refer to the phone itself.
 class EdgeConfig extends ChangeNotifier {
   static const _kBaseUrl = 'edge_base_url';
   static const _kZoneId = 'edge_zone_id';
@@ -28,7 +27,16 @@ class EdgeConfig extends ChangeNotifier {
 
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    _baseUrl = prefs.getString(_kBaseUrl) ?? AppConstants.defaultEdgeApiUrl;
+    final savedUrl = prefs.getString(_kBaseUrl);
+    // The Pi's former DHCP address was shipped as the initial app default.
+    // Migrate only that known stale value; a URL deliberately chosen by a user
+    // is never overwritten.
+    _baseUrl = savedUrl == 'http://192.168.1.31:3001'
+        ? AppConstants.defaultEdgeApiUrl
+        : savedUrl ?? AppConstants.defaultEdgeApiUrl;
+    if (savedUrl == 'http://192.168.1.31:3001') {
+      await prefs.setString(_kBaseUrl, _baseUrl);
+    }
     _zoneId = prefs.getString(_kZoneId) ?? 'zone-a';
     _loaded = true;
     notifyListeners();

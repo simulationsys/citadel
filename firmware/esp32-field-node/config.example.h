@@ -9,7 +9,7 @@
 
 // The Raspberry Pi's LAN address and the consolidated edge API's port.
 // Never "localhost" or 127.0.0.1 — on the ESP32 those resolve to the ESP32.
-#define EDGE_API_URL "http://192.168.1.31:3001/v1/readings"
+#define EDGE_API_URL "http://192.168.1.11:3001/v1/readings"
 
 #define DEVICE_ID "field-node-01"
 #define ZONE_ID   "zone-a"
