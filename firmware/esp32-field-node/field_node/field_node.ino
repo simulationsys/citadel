@@ -51,8 +51,20 @@
 // the historical id "pump-relay-01"; other zones are "pump-<zoneId>".
 #define EXPECTED_ACTUATOR_ID "pump-relay-01"
 #endif
+#ifndef WIFI_ENABLED
+#define WIFI_ENABLED true
+#endif
+#ifndef SOIL_SENSOR_WIRED
+#define SOIL_SENSOR_WIRED false
+#endif
+#ifndef RELAY_ACTIVE_HIGH
+#define RELAY_ACTIVE_HIGH true
+#endif
 
-const bool WIFI_ENABLED = true;
+// No rain-gauge reader exists until the team selects the actual sensor and
+// calibrates its output. Keep this false so the app shows `--` instead of a
+// fabricated 0 mm measurement.
+const bool RAIN_GAUGE_WIRED = false;
 
 // ── Pins ─────────────────────────────────────────────────────────────────
 const int STATUS_LED_PIN    = 2;
@@ -67,13 +79,9 @@ const int RELAY_PIN         = 26;
 // which would *suppress* the irrigation advisory — a fabricated reading that
 // actively hides the condition it is meant to detect. Flip to true only after
 // wiring AND calibrating SOIL_DRY_VALUE / SOIL_WET_VALUE against real soil.
-const bool SOIL_SENSOR_WIRED = false;
-const bool RAIN_GAUGE_WIRED  = false;  // no tipping bucket on this build
-
 // Relay polarity. Most blue relay boards are active-LOW: the coil energises
 // when the pin is pulled LOW. Get this wrong and "off" energises the pump.
 // Verify with the board's own LED before wiring any load.
-const bool RELAY_ACTIVE_HIGH = true;
 
 // ── Calibration ──────────────────────────────────────────────────────────
 const int   SOIL_DRY_VALUE = 3200;

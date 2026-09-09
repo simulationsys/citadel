@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import '../../core/config/app_settings_provider.dart';
 import '../../core/config/app_strings.dart';
 import '../../core/theme/app_colors.dart';
-import '../../data/models/crop_health_result.dart';
 import '../../data/repositories/farm_state_repository.dart';
 import 'scan_result_screen.dart';
 
@@ -22,60 +21,37 @@ class _ScanScreenState extends State<ScanScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isAnalysing = false;
   bool _isSingleLeafMode = true;
-  bool _isFlashOn = false;
-  String _selectedCrop = 'Wheat (Plot B - North)';
+  String _selectedCrop = 'Tomato';
 
   void _toggleScanMode(bool singleLeaf) {
-    setState(() => _isSingleLeafMode = singleLeaf);
-  }
-
-  void _toggleFlash() {
-    setState(() => _isFlashOn = !_isFlashOn);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isFlashOn ? 'Camera Flash Enabled' : 'Camera Flash Disabled'), duration: const Duration(seconds: 1)),
-    );
+    if (!singleLeaf) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('The current AI model analyzes a close-up of one tomato leaf.'),
+      ));
+      return;
+    }
+    setState(() => _isSingleLeafMode = true);
   }
 
   void _showCropPicker() {
-    final settings = context.read<AppSettingsProvider>();
-    final cropsList = settings.userCrops.isNotEmpty
-        ? settings.userCrops
-        : AppSettingsProvider.availableIndianCrops;
-
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+      builder: (context) => const Padding(
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              AppStrings.translate('Select Active Crop', settings.isHindi),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'Tomato crop-health model',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: cropsList.length,
-                itemBuilder: (context, index) {
-                  final cropName = cropsList[index];
-                  final translatedCrop = AppStrings.translate(cropName, settings.isHindi);
-                  return ListTile(
-                    leading: const Icon(Icons.eco, color: AppColors.primaryGreen),
-                    title: Text(translatedCrop),
-                    selected: _selectedCrop == cropName,
-                    onTap: () {
-                      setState(() => _selectedCrop = cropName);
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
+            SizedBox(height: 12),
+            Text(
+              'The installed model is trained for tomato leaves. Other crops are not analyzed yet.',
             ),
+            SizedBox(height: 16),
           ],
         ),
       ),
@@ -152,41 +128,16 @@ class _ScanScreenState extends State<ScanScreen> {
         ),
       );
     } catch (e) {
-      setState(() => _isAnalysing = false);
+      if (mounted) setState(() => _isAnalysing = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Camera Access Error: $e'),
-            action: SnackBarAction(
-              label: 'Sample Scan',
-              onPressed: _simulateCapture,
-            ),
+            backgroundColor: AppColors.severityCritical,
+            content: Text('Camera or image access failed: $e'),
           ),
         );
       }
     }
-  }
-
-  void _simulateCapture() {
-    setState(() => _isAnalysing = true);
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return;
-      setState(() => _isAnalysing = false);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ScanResultScreen(
-            imageFile: null,
-            result: CropHealthResult(
-              crop: _selectedCrop.split(' ').first,
-              label: 'rust',
-              confidence: 0.94,
-              imageQuality: 'acceptable',
-            ),
-          ),
-        ),
-      );
-    });
   }
 
   @override
@@ -336,17 +287,17 @@ class _ScanScreenState extends State<ScanScreen> {
                 ),
               ),
               InkWell(
-                onTap: _toggleFlash,
+                onTap: _showTipsDialog,
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _isFlashOn ? Colors.amber[100] : const Color(0xFFE8F0FE),
+                    color: const Color(0xFFE8F0FE),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _isFlashOn ? Icons.flash_on : Icons.flash_off,
-                    color: _isFlashOn ? Colors.orange[800] : AppColors.textPrimary,
+                    Icons.lightbulb_outline,
+                    color: AppColors.textPrimary,
                     size: 20,
                   ),
                 ),

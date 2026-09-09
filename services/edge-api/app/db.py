@@ -70,12 +70,15 @@ def init_db() -> None:
         # WAL is a no-op inside a transaction, so it goes here and not in migrate().
         conn.execute("PRAGMA journal_mode=WAL")
         migrate(conn)
-        seed_if_empty(conn)
+        # Real deployments must wait for the field node. Plausible seed values
+        # make a disconnected system look healthy and undermine the hardware
+        # demo. Synthetic state is available only through an explicit demo flag.
+        if os.getenv("CITADEL_SEED_DEMO_DATA", "0").lower() in {"1", "true", "yes"}:
+            seed_if_empty(conn)
 
 
 def seed_if_empty(conn: sqlite3.Connection) -> None:
-    """Keeps the original database.py behaviour: a fresh clone still renders a
-    populated dashboard."""
+    """Populate explicit demo mode. Never called by the default runtime."""
     if conn.execute("SELECT COUNT(*) FROM readings").fetchone()[0]:
         return
     now = now_iso()

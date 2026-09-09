@@ -9,7 +9,9 @@ class AppConstants {
   static const String defaultEdgeApiUrl = 'http://192.168.1.31:3001';
 
   /// Polling interval for farm state refresh.
-  static const Duration pollInterval = Duration(seconds: 30);
+  /// Match the ESP32's 10-second reporting interval so a physical sensor
+  /// change appears in the app on the next sample during field use and demos.
+  static const Duration pollInterval = Duration(seconds: 10);
 
   /// Data freshness thresholds. Mirrors FRESH_SEC/STALE_SEC in
   /// services/edge-api/app/main.py. The server's `freshness` field is

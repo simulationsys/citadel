@@ -100,7 +100,9 @@ class HttpFarmStateRepository implements FarmStateRepository {
       // multipart form with the field named `image` — not raw JPEG bytes.
       final request = http.MultipartRequest('POST', uri)
         ..files.add(await http.MultipartFile.fromPath('image', image.path));
-      final streamed = await request.send().timeout(const Duration(seconds: 40));
+      final streamed = await _client
+          .send(request)
+          .timeout(const Duration(seconds: 40));
       res = await http.Response.fromStream(streamed);
     } on TimeoutException catch (e) {
       throw CropScanException(CropScanFailure.timeout, '$e');

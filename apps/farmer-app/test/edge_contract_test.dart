@@ -99,7 +99,11 @@ void main() {
       final r = Reading.fromJson(completeReading());
       expect(r.soilMoisturePct, 24.0);
       expect(r.temperatureC, 34.0);
+      expect(r.humidityPct, 55.0);
+      expect(r.rainfallMm, 0.0);
+      expect(r.waterLevelPct, 12.0);
       expect(r.relayReported, 'OFF');
+      expect(r.reportedMetricCount, 5);
       expect(r.capturedAt, isNotNull);
       expect(r.receivedAt, isNotNull);
     });
@@ -112,6 +116,7 @@ void main() {
       expect(r.rainfallMm, 32.0);
       expect(r.soilMoisturePct, isNull);
       expect(r.temperatureC, isNull);
+      expect(r.reportedMetricCount, 2);
     });
 
     test('missing sensors are null, never zero', () {
@@ -119,6 +124,8 @@ void main() {
       expect(r.temperatureC, isNot(0.0));
       expect(r.hasTemperature, isFalse);
       expect(r.hasSoilMoisture, isFalse);
+      expect(r.hasRainfall, isTrue);
+      expect(r.hasWaterLevel, isTrue);
     });
 
     test('absent sensors render as -- not a stand-in number', () {
@@ -240,6 +247,9 @@ void main() {
               'label': 'late_blight',
               'confidence': 0.88,
               'imageQuality': 'acceptable',
+              '_latency_ms': 142.5,
+              '_model_load_ms': 310.0,
+              '_runtime': 'tflite_runtime',
             },
             'state': farmState(reading: completeReading()),
           }),
@@ -247,6 +257,9 @@ void main() {
       final result = await repo(client).submitImage(image);
       expect(result.label, 'late_blight');
       expect(result.confidence, 0.88);
+      expect(result.latencyMs, 142.5);
+      expect(result.modelLoadMs, 310.0);
+      expect(result.runtime, 'tflite_runtime');
     });
 
     test('low confidence is a legitimate inconclusive result', () async {

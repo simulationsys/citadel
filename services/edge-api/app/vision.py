@@ -64,15 +64,21 @@ def status() -> dict:
     /v1/crop-health an honest 503 instead of an ENOENT traceback — ml/vision/.venv
     does not exist today, so this is the path that actually runs."""
     interpreter, script, model = python_path(), SCRIPT, MODEL
+    runtime = _runtime_name()
     return {
-        "available": interpreter.is_file() and script.is_file() and model.is_file(),
+        "available": (
+            interpreter.is_file()
+            and script.is_file()
+            and model.is_file()
+            and runtime is not None
+        ),
         "interpreter": interpreter.is_file(),
         "script": script.is_file(),
         "model": model.is_file(),
         "modelPath": model.name,
         # find_spec, not import: naming the runtime must not cost a TensorFlow
         # import on a 1 GB Pi just to answer /health.
-        "runtime": _runtime_name(),
+        "runtime": runtime,
     }
 
 

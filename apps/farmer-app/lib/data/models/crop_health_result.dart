@@ -30,6 +30,9 @@ class CropHealthResult {
   final String? id;
   final DateTime? timestamp;
   final List<String> recommendations;
+  final double? latencyMs;
+  final double? modelLoadMs;
+  final String? runtime;
 
   const CropHealthResult({
     this.kind = 'crop_health',
@@ -41,6 +44,9 @@ class CropHealthResult {
     this.id,
     this.timestamp,
     this.recommendations = const [],
+    this.latencyMs,
+    this.modelLoadMs,
+    this.runtime,
   });
 
   factory CropHealthResult.fromJson(Map<String, dynamic> json) {
@@ -64,6 +70,9 @@ class CropHealthResult {
               ?.map((e) => e.toString())
               .toList() ??
           const [],
+      latencyMs: (data['_latency_ms'] as num?)?.toDouble(),
+      modelLoadMs: (data['_model_load_ms'] as num?)?.toDouble(),
+      runtime: data['_runtime'] as String?,
     );
   }
 

@@ -156,6 +156,22 @@ class IrrigationSafetyTests(EdgeApiTestCase):
 class EndToEndLoopTests(EdgeApiTestCase):
     """Sensor -> storage -> advisory -> approval -> downlink -> acknowledgement."""
 
+    def test_unreachable_cloud_never_blocks_the_local_sensor_loop(self):
+        """Public internet/cloud is optional; LAN ingestion and reads are not."""
+        import os
+
+        os.environ["CITADEL_CLOUD_URL"] = "http://127.0.0.1:9"
+        client = self.client()
+        posted = client.post("/v1/readings", json=reading(
+            eventId="offline-local-1", temperatureC=29.5, humidityPct=61.0))
+        self.assertEqual(posted.status_code, 201)
+
+        state = client.get("/v1/farm-state?zoneId=zone-a")
+        self.assertEqual(state.status_code, 200)
+        self.assertEqual(state.json()["reading"]["eventId"], "offline-local-1")
+        self.assertEqual(state.json()["reading"]["temperatureC"], 29.5)
+
+
     def test_complete_and_partial_readings_are_both_accepted(self):
         client = self.client()
         full = client.post("/v1/readings", json=reading())

@@ -53,6 +53,10 @@ class EdgeApiTestCase(unittest.TestCase):
         # unlink the file until every connection this test opened is closed.
         self.addCleanup(self._remove_db)
         os.environ["CITADEL_DB_PATH"] = self.db_file
+        # Most legacy contract tests exercise the opt-in populated dashboard.
+        # Production defaults to no synthetic readings; that behavior has its
+        # own regression test below.
+        os.environ["CITADEL_SEED_DEMO_DATA"] = "1"
         # Point the vision bridge at nothing, so no test can accidentally shell out.
         os.environ["CITADEL_VISION_PYTHON"] = str(Path(self.db_file).with_name("no-such-python"))
 
@@ -63,6 +67,8 @@ class EdgeApiTestCase(unittest.TestCase):
     def tearDown(self):
         os.environ.pop("CITADEL_DB_PATH", None)
         os.environ.pop("CITADEL_VISION_PYTHON", None)
+        os.environ.pop("CITADEL_SEED_DEMO_DATA", None)
+        os.environ.pop("CITADEL_CLOUD_URL", None)
 
     def client(self):
         from fastapi.testclient import TestClient
@@ -130,6 +136,14 @@ class MigrationTests(EdgeApiTestCase):
 
 
 class FarmStateTests(EdgeApiTestCase):
+    def test_fresh_production_database_waits_for_real_hardware(self):
+        os.environ["CITADEL_SEED_DEMO_DATA"] = "0"
+        client = self.client()
+        body = client.get("/v1/farm-state").json()
+        self.assertIsNone(body["reading"])
+        self.assertEqual(body["freshness"], "offline")
+        self.assertIsNone(body["latestVision"])
+
     def test_farm_state_satisfies_dashboard_contract(self):
         client = self.client()
         # No query params, exactly as static/index.html:233 calls it.

@@ -17,3 +17,15 @@
 // Must match actuator_id_for(zone) in services/edge-api/app/db.py.
 // zone-a keeps the historical id; other zones are "pump-<zoneId>".
 #define EXPECTED_ACTUATOR_ID "pump-relay-01"
+
+// Set these from the physical build before flashing. An absent sensor is
+// omitted from the API payload and appears as `--` in the Flutter app.
+#define WIFI_ENABLED true
+#define SOIL_SENSOR_WIRED false
+
+// Rainfall remains unavailable until a real gauge and calibrated reader are
+// implemented. The Flutter app will show `--` for this metric in the meantime.
+
+// Verify using the relay board LED with no pump/load attached. Many common
+// relay modules are active-low, in which case set this to false.
+#define RELAY_ACTIVE_HIGH true

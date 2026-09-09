@@ -77,6 +77,19 @@ class Reading {
   bool get hasSoilMoisture => soilMoisturePct != null;
   bool get hasTemperature => temperatureC != null;
   bool get hasHumidity => humidityPct != null;
+  bool get hasRainfall => rainfallMm != null;
+  bool get hasWaterLevel => waterLevelPct != null;
+
+  /// Number of physical sensor metrics included in this reading. This lets the
+  /// UI describe the node honestly instead of claiming a fixed number of
+  /// active sensors when some hardware is absent or has failed.
+  int get reportedMetricCount => [
+        soilMoisturePct,
+        temperatureC,
+        humidityPct,
+        rainfallMm,
+        waterLevelPct,
+      ].where((value) => value != null).length;
 
   /// Display helper: `--` for an absent sensor, never a stand-in number.
   static String display(double? value, {int decimals = 0}) =>

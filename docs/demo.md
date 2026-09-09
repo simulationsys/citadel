@@ -8,6 +8,9 @@ each device resolves to that device.
 
 ## 0. Start the node
 
+Real hardware mode is the default. Ensure `CITADEL_SEED_DEMO_DATA` is unset so
+a fresh database shows "waiting for node" instead of synthetic readings.
+
 ```bash
 cd ~/citadel
 services/edge-api/.venv/bin/python -m uvicorn app.main:app \
