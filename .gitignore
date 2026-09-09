@@ -14,3 +14,5 @@ firmware/esp32-field-node/config.h
 *.db
 .venv/
 *.egg-info/
+*.db.bak
+.pio/

@@ -8,6 +8,11 @@ from .schemas import Advisory, PestObservation, SensorReading
 # The edge API asserts against this constant; openapi.json publishes a Literal enum from it.
 ADVISORY_TYPES: frozenset[str] = frozenset({"flood", "irrigation", "heat", "disease_risk", "pest"})
 
+# Crop-health labels that are not a disease. Without this guard a confident
+# "healthy" clears disease_confident_confidence and renders as
+# "Possible crop disease detected: healthy".
+NON_DISEASE_LABELS: frozenset[str] = frozenset({"healthy", "invalid_image", "inconclusive"})
+
 
 def _at_least(v: float | None, t: float) -> bool:
     """True iff sensor value is present and >= threshold. A missing sensor never fires."""
@@ -73,7 +78,8 @@ def evaluate(
             # Crop-health branch: vision result reused via PestObservation with crop_health=True.
             # Emits disease_risk when confidence clears the profile threshold, completing
             # the leaf-blight demo beat that advisory_engine.py previously provided.
-            if pest.confidence >= profile.disease_confident_confidence:
+            if (pest.label.lower() not in NON_DISEASE_LABELS
+                    and pest.confidence >= profile.disease_confident_confidence):
                 advisories.append(Advisory(
                     "disease_risk", "warning",
                     "Possible crop disease detected",

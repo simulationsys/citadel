@@ -2,6 +2,10 @@
   "name": "citadel",
   "private": true,
   "version": "0.1.0",
-  "workspaces": ["apps/*", "services/*", "packages/*"],
-  "scripts": { "dev:edge": "npm --workspace @citadel/edge-api run dev", "dev:dashboard": "npm --workspace @citadel/dashboard run dev", "check": "npm --workspaces --if-present run check" }
+  "scripts": {
+    "dev:edge": "python -m uvicorn app.main:app --reload --port 3001 --app-dir services/edge-api",
+    "test:edge": "cd services/edge-api && .venv\\Scripts\\python -m unittest discover -s tests",
+    "test:pest": "cd ml/pest-risk && python -m unittest discover -s tests",
+    "check": "npm run test:edge && npm run test:pest"
+  }
 }
