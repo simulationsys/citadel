@@ -9,6 +9,7 @@ import '../../core/config/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/repositories/farm_state_repository.dart';
 import '../../widgets/profile_avatar_button.dart';
+import '../../widgets/citadel_logo.dart';
 import 'scan_result_screen.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -183,13 +184,14 @@ class _ScanScreenState extends State<ScanScreen> {
         icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
         onPressed: () => Navigator.pop(context),
       ),
-      title: const Text(
-        'Crop Scanner',
-        style: TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
+      title: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CitadelLogo(size: 34),
+          SizedBox(width: 8),
+          Text('Crop Scanner', style: TextStyle(
+            color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+        ],
       ),
       centerTitle: true,
       actions: const [ProfileAvatarButton(size: 32)],

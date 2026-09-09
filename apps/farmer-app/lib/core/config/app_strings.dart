@@ -66,11 +66,6 @@ class AppStrings {
       AppLanguage.haryanvi: 'लाइव • अभी सिंक हो ग्या',
       AppLanguage.punjabi: 'ਲਾਈਵ • ਹੁਣੇ ਸਿੰਕ ਹੋਇਆ',
     },
-    'Ask AI': {
-      AppLanguage.hindi: 'AI से पूछें',
-      AppLanguage.haryanvi: 'AI तै पूछो',
-      AppLanguage.punjabi: 'AI ਤੋਂ ਪੁੱਛੋ',
-    },
     'Real-time Sensors': {
       AppLanguage.hindi: 'वास्तविक समय सेंसर',
       AppLanguage.haryanvi: 'असली टैम के सेंसर',

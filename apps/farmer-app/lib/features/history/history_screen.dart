@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/config/app_settings_provider.dart';
 import '../../core/config/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/citadel_logo.dart';
 import '../../widgets/profile_avatar_button.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -13,43 +14,8 @@ class HistoryScreen extends StatefulWidget {
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
-
 class _HistoryScreenState extends State<HistoryScreen> {
   String _selectedFilter = 'All';
-
-  void _showMicDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.mic, color: AppColors.primaryGreen, size: 48),
-            const SizedBox(height: 16),
-            const Text(
-              'Voice Assistant Active',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Listening to your farm question… Ask about weather, advisory, or irrigation.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showDosageDialog(BuildContext context) {
     showDialog(
@@ -69,9 +35,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: const [
             Text('Recommended Organic Treatment:', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('• Neem Oil (10,000 PPM): 5 ml per Liter water'),
-            Text('• Spray Schedule: Early morning or post 5:00 PM'),
-            Text('• Coverage: Underside of leaves in North Plot'),
+            Text('â€¢ Neem Oil (10,000 PPM): 5 ml per Liter water'),
+            Text('â€¢ Spray Schedule: Early morning or post 5:00 PM'),
+            Text('â€¢ Coverage: Underside of leaves in North Plot'),
             SizedBox(height: 12),
             Text('Status: 100L batch ready for field application.', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w600)),
           ],
@@ -110,10 +76,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: const [
             Text('Soil Moisture Telemetry (Last 24h):', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('• 06:15 PM Yesterday: 42% (Low Moisture Alert)'),
-            Text('• 06:30 PM Yesterday: Drip Irrigation Started (45m)'),
-            Text('• 07:15 PM Yesterday: Drip Cycle Completed'),
-            Text('• Current Level: 68% (Optimal Root Zone)'),
+            Text('â€¢ 06:15 PM Yesterday: 42% (Low Moisture Alert)'),
+            Text('â€¢ 06:30 PM Yesterday: Drip Irrigation Started (45m)'),
+            Text('â€¢ 07:15 PM Yesterday: Drip Cycle Completed'),
+            Text('â€¢ Current Level: 68% (Optimal Root Zone)'),
           ],
         ),
         actions: [
@@ -141,9 +107,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: const [
             Text('Rohtak Zone Radar Overview:', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('• Precipitation: 40mm expected in next 3 days'),
-            Text('• Wind: 14 km/h North-East'),
-            Text('• Recommendation: Hold off chemical spray to prevent wash-off'),
+            Text('â€¢ Precipitation: 40mm expected in next 3 days'),
+            Text('â€¢ Wind: 14 km/h North-East'),
+            Text('â€¢ Recommendation: Hold off chemical spray to prevent wash-off'),
           ],
         ),
         actions: [
@@ -171,9 +137,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: const [
             Text('Application Summary:', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('• Applied: Neem-coated Urea (45 kg/ha)'),
-            Text('• Area Covered: 4.2 hectares'),
-            Text('• Satellite NDVI Response: +8% vigor increase'),
+            Text('â€¢ Applied: Neem-coated Urea (45 kg/ha)'),
+            Text('â€¢ Area Covered: 4.2 hectares'),
+            Text('â€¢ Satellite NDVI Response: +8% vigor increase'),
           ],
         ),
         actions: [
@@ -201,14 +167,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       automaticallyImplyLeading: false,
       title: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primaryGreen,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.agriculture, color: Colors.white, size: 24),
-          ),
+          const CitadelLogo(size: 42),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -226,7 +185,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        AppStrings.translate('Online • Synced', context.read<AppSettingsProvider>().language),
+                        AppStrings.translate('Online â€¢ Synced', context.read<AppSettingsProvider>().language),
                         style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -239,20 +198,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ],
       ),
       actions: [
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2)),
-            ],
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.mic, color: AppColors.primaryGreen, size: 20),
-            onPressed: () => _showMicDialog(context),
-          ),
-        ),
         const ProfileAvatarButton(margin: EdgeInsets.only(right: 16, left: 12)),
       ],
     );
@@ -677,7 +622,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            AppStrings.translate('Chemical spray postponed • Saved \$45', context.read<AppSettingsProvider>().language),
+                            AppStrings.translate('Chemical spray postponed â€¢ Saved \$45', context.read<AppSettingsProvider>().language),
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -765,7 +710,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            AppStrings.translate('Completed (Urea applied) • NDVI +8%', context.read<AppSettingsProvider>().language),
+                            AppStrings.translate('Completed (Urea applied) â€¢ NDVI +8%', context.read<AppSettingsProvider>().language),
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                             overflow: TextOverflow.ellipsis,
                           ),

@@ -1,9 +1,8 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../../core/config/app_settings_provider.dart';
 import '../../core/config/app_strings.dart';
@@ -13,6 +12,7 @@ import '../../core/theme/app_colors.dart';
 import '../../data/models/reading.dart';
 import '../../data/repositories/farm_state_repository.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/citadel_logo.dart';
 import '../../widgets/freshness_banner.dart';
 import '../../widgets/profile_avatar_button.dart';
 
@@ -22,11 +22,8 @@ class HomeScreen extends StatefulWidget {
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
-
 class _HomeScreenState extends State<HomeScreen> {
   Timer? _pollTimer;
-  final stt.SpeechToText _speech = stt.SpeechToText();
-  bool _isListening = false;
 
   @override
   void initState() {
@@ -44,108 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _pollTimer?.cancel();
-    _speech.stop();
     super.dispose();
-  }
-
-  void _showMicDialog(BuildContext context) {
-    final queryController = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(sheetContext).viewInsets.bottom + 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.mic, color: AppColors.primaryGreen, size: 48),
-            const SizedBox(height: 16),
-            const Text(
-              'Voice Assistant Active',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Listening to your farm query… Say "What is the soil moisture level?" or "Show weather forecast".',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: queryController,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submitVoiceQuery(sheetContext, queryController.text),
-              decoration: InputDecoration(
-                hintText: 'Ask your farm question',
-                prefixIcon: IconButton(
-                  tooltip: 'Start voice input',
-                  icon: Icon(_isListening ? Icons.mic_rounded : Icons.mic_none_rounded, color: AppColors.primaryGreen),
-                  onPressed: () => _listenForQuery(queryController),
-                ),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _submitVoiceQuery(sheetContext, queryController.text),
-                icon: const Icon(Icons.send_rounded),
-                label: const Text('Ask Assistant'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _listenForQuery(TextEditingController controller) async {
-    if (_isListening) {
-      await _speech.stop();
-      if (mounted) setState(() => _isListening = false);
-      return;
-    }
-
-    final available = await _speech.initialize(
-      onStatus: (status) {
-        if (mounted && (status == 'done' || status == 'notListening')) {
-          setState(() => _isListening = false);
-        }
-      },
-      onError: (_) {
-        if (mounted) setState(() => _isListening = false);
-      },
-    );
-    if (!available) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Voice input is unavailable. Check microphone permission.')));
-      }
-      return;
-    }
-    if (mounted) setState(() => _isListening = true);
-    await _speech.listen(
-      onResult: (result) {
-        controller.value = controller.value.copyWith(
-          text: result.recognizedWords,
-          selection: TextSelection.collapsed(offset: result.recognizedWords.length),
-        );
-      },
-    );
-  }
-
-  void _submitVoiceQuery(BuildContext context, String query) {
-    final normalizedQuery = query.trim();
-    if (normalizedQuery.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a farm question first.')));
-      return;
-    }
-    Navigator.pop(context);
-    ScaffoldMessenger.of(this.context).showSnackBar(SnackBar(content: Text('Assistant received: $normalizedQuery')));
   }
 
   void _showWeatherForecastDialog(BuildContext context) {
@@ -164,11 +60,11 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
-            Text('• Today: 34°C, Clear Skies, Humid'),
-            Text('• Tomorrow: 33°C, Partly Cloudy'),
-            Text('• Day 3: 31°C, Moderate Rain Expected (15mm)'),
-            Text('• Day 4: 29°C, Heavy Rain Expected (25mm)'),
-            Text('• Day 5: 32°C, Sunny'),
+            Text('â€¢ Today: 34Â°C, Clear Skies, Humid'),
+            Text('â€¢ Tomorrow: 33Â°C, Partly Cloudy'),
+            Text('â€¢ Day 3: 31Â°C, Moderate Rain Expected (15mm)'),
+            Text('â€¢ Day 4: 29Â°C, Heavy Rain Expected (25mm)'),
+            Text('â€¢ Day 5: 32Â°C, Sunny'),
           ],
         ),
         actions: [
@@ -223,11 +119,11 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
-            Text('• Total Area: 4.5 hectares'),
-            Text('• Crop Stage: Day 78 (Boll Opening)'),
-            Text('• Health Score: 96% Healthy'),
-            Text('• Estimated Harvest: 22 days remaining'),
-            Text('• Expected Yield: 3.2 Tonnes/ha'),
+            Text('â€¢ Total Area: 4.5 hectares'),
+            Text('â€¢ Crop Stage: Day 78 (Boll Opening)'),
+            Text('â€¢ Health Score: 96% Healthy'),
+            Text('â€¢ Estimated Harvest: 22 days remaining'),
+            Text('â€¢ Expected Yield: 3.2 Tonnes/ha'),
           ],
         ),
         actions: [
@@ -255,14 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
       titleSpacing: 16,
       title: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primaryGreen,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.agriculture, color: Colors.white, size: 24),
-          ),
+          const CitadelLogo(size: 42),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -293,20 +182,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       actions: [
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2)),
-            ],
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.mic, color: AppColors.primaryGreen, size: 20),
-            onPressed: () => _showMicDialog(context),
-          ),
-        ),
         const ProfileAvatarButton(margin: EdgeInsets.only(right: 16, left: 12)),
       ],
     );
@@ -339,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 AppStrings.translate('Real-time Sensors', settings.language),
                 actionText: reading == null
                     ? 'Waiting for node'
-                    : '${reading.zoneId} • ${reading.reportedMetricCount}/5 reporting',
+                    : '${reading.zoneId} â€¢ ${reading.reportedMetricCount}/5 reporting',
                 onActionTap: () => _showSensorDetailDialog(
                   context,
                   'Field Node',
@@ -369,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildGreetingSection(Reading? reading, AppSettingsProvider settings) {
-    final temp = '${Reading.display(reading?.temperatureC)}°C';
+    final temp = '${Reading.display(reading?.temperatureC)}Â°C';
     final greeting = '${AppStrings.translate('Good Morning', settings.language)},\n${settings.userName}';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,10 +351,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ? 'never'
         : '${DateTime.now().difference(provider.lastFetchTime!).inMinutes}m ago';
     final label = freshness == DataFreshness.live
-        ? AppStrings.translate('Live • Synced just now', settings.language)
+        ? AppStrings.translate('Live â€¢ Synced just now', settings.language)
         : freshness == DataFreshness.stale
-            ? 'Stale • Synced $ago'
-            : 'Offline Ready • Synced $ago';
+            ? 'Stale â€¢ Synced $ago'
+            : 'Offline Ready â€¢ Synced $ago';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -516,23 +391,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            ElevatedButton.icon(
-              onPressed: () => _showMicDialog(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryGreen,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-              icon: const Icon(Icons.mic, size: 16),
-              label: Text(AppStrings.translate('Ask AI', settings.language), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-            ),
           ],
         ),
         const SizedBox(height: 6),
-        Text('Edge: ${edge.normalizedBaseUrl} • ${edge.zoneId}',
+        Text('Edge: ${edge.normalizedBaseUrl} â€¢ ${edge.zoneId}',
             style: const TextStyle(fontSize: 11, color: AppColors.textTertiary)),
       ],
     );
@@ -545,11 +407,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (topAlert != null) {
       title = AppStrings.translate(topAlert.title as String, context.read<AppSettingsProvider>().language);
       message = AppStrings.translate(topAlert.message as String, context.read<AppSettingsProvider>().language);
-      tag = AppStrings.translate('${topAlert.severity.toString().toUpperCase()} • ${topAlert.type.toString().toUpperCase()} ALERT', context.read<AppSettingsProvider>().language);
+      tag = AppStrings.translate('${topAlert.severity.toString().toUpperCase()} â€¢ ${topAlert.type.toString().toUpperCase()} ALERT', context.read<AppSettingsProvider>().language);
     } else {
       title = AppStrings.translate('Whitefly Infestation Detected Nearby', context.read<AppSettingsProvider>().language);
-      message = AppStrings.translate('Active in North Cotton field — apply organic neem spray before 5:00 PM to secure boll formation.', context.read<AppSettingsProvider>().language);
-      tag = AppStrings.translate('HIGH SEVERITY • PEST ALERT', context.read<AppSettingsProvider>().language);
+      message = AppStrings.translate('Active in North Cotton field â€” apply organic neem spray before 5:00 PM to secure boll formation.', context.read<AppSettingsProvider>().language);
+      tag = AppStrings.translate('HIGH SEVERITY â€¢ PEST ALERT', context.read<AppSettingsProvider>().language);
     }
     return Container(
       padding: const EdgeInsets.all(16),
@@ -653,7 +515,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSensorsGrid(Reading? reading) {
     final lang = context.read<AppSettingsProvider>().language;
     final moisture = '${Reading.display(reading?.soilMoisturePct)}%';
-    final temp = '${Reading.display(reading?.temperatureC)}°C';
+    final temp = '${Reading.display(reading?.temperatureC)}Â°C';
     final humidity = '${Reading.display(reading?.humidityPct)}%';
     final rainfall = '${Reading.display(reading?.rainfallMm, decimals: 1)} mm';
     final waterLevel = '${Reading.display(reading?.waterLevelPct)}%';
@@ -698,6 +560,7 @@ class _HomeScreenState extends State<HomeScreen> {
           statusColor: moistureStatus.color,
           statusBgColor: moistureStatus.background,
           iconData: Icons.water_drop,
+          assetPath: 'assets/water_on_soil_for_irrigation.png',
           iconColor: Colors.blue[300]!,
           iconBg: Colors.blue[50]!,
           onTap: () => _showSensorDetailDialog(context,
@@ -711,6 +574,7 @@ class _HomeScreenState extends State<HomeScreen> {
           statusColor: temperatureStatus.color,
           statusBgColor: temperatureStatus.background,
           iconData: Icons.thermostat,
+          assetPath: 'assets/temp_scale.png',
           iconColor: Colors.orange[700]!,
           iconBg: Colors.orange[50]!,
           onTap: () => _showSensorDetailDialog(context,
@@ -724,6 +588,7 @@ class _HomeScreenState extends State<HomeScreen> {
           statusColor: humidityStatus.color,
           statusBgColor: humidityStatus.background,
           iconData: Icons.air,
+          assetPath: 'assets/humidity.png',
           iconColor: AppColors.primaryGreen,
           iconBg: AppColors.cardGreenBg,
           onTap: () => _showSensorDetailDialog(context,
@@ -737,6 +602,7 @@ class _HomeScreenState extends State<HomeScreen> {
           statusColor: rainfallStatus.color,
           statusBgColor: rainfallStatus.background,
           iconData: Icons.grain,
+          assetPath: 'assets/rainfall.png',
           iconColor: Colors.blueGrey,
           iconBg: Colors.blueGrey[50]!,
           onTap: () => _showSensorDetailDialog(context, 'Rainfall', rainfall,
@@ -749,6 +615,7 @@ class _HomeScreenState extends State<HomeScreen> {
           statusColor: waterStatus.color,
           statusBgColor: waterStatus.background,
           iconData: Icons.water,
+          assetPath: 'assets/water_droplet.png',
           iconColor: Colors.blue[700]!,
           iconBg: Colors.blue[50]!,
           onTap: () => _showSensorDetailDialog(context, 'Water Level', waterLevel,
@@ -765,6 +632,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color statusColor,
     required Color statusBgColor,
     required IconData iconData,
+    String? assetPath,
     required Color iconColor,
     required Color iconBg,
     IconData? statusIcon,
@@ -792,7 +660,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-                  child: Icon(iconData, color: iconColor, size: 20),
+                  child: assetPath == null
+                      ? Icon(iconData, color: iconColor, size: 20)
+                      : Image.asset(
+                          assetPath,
+                          width: 28,
+                          height: 28,
+                          cacheWidth: 84,
+                          cacheHeight: 84,
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
+                        ),
                 ),
                 Text(title, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
               ],
@@ -889,7 +767,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(color: const Color(0xFF5EE085), borderRadius: BorderRadius.circular(12)),
-                          child: const Text('• 96% Healthy', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                          child: const Text('â€¢ 96% Healthy', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                       ],
                     ),
@@ -900,7 +778,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(width: 4),
                         Text('Day 78', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         SizedBox(width: 6),
-                        Text('•', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('â€¢', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         SizedBox(width: 6),
                         Expanded(
                           child: Text('Boll Opening', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen), overflow: TextOverflow.ellipsis),

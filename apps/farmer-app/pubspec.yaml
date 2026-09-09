@@ -18,7 +18,6 @@ dependencies:
   shared_preferences: ^2.3.0
   intl: ^0.20.3
   google_fonts: ^6.2.0
-  speech_to_text: ^7.3.0
   objective_c: 8.0.0
 
 dev_dependencies:
@@ -30,6 +29,12 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
+    - assets/citadel_logo_bg_remove.png
+    - assets/humidity.png
+    - assets/rainfall.png
+    - assets/temp_scale.png
+    - assets/water_droplet.png
+    - assets/water_on_soil_for_irrigation.png
     - assets/images/logo.png
     - assets/images/onboarding_sensors.png
     - assets/images/onboarding_scan.png

@@ -81,9 +81,11 @@ class _SplashScreenState extends State<SplashScreen>
             );
           },
           child: Image.asset(
-            'assets/images/logo.png',
-            width: 200,
-            height: 200,
+            'assets/citadel_logo_bg_remove.png',
+            width: 240,
+            height: 240,
+            cacheWidth: 720,
+            cacheHeight: 720,
             fit: BoxFit.contain,
           ),
         ),

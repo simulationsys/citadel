@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/crop_health_result.dart';
 import '../../widgets/profile_avatar_button.dart';
+import '../../widgets/citadel_logo.dart';
 
 /// Presents only values returned by the crop-health pipeline. The current
 /// model is a tomato-leaf classifier, not a detector or prescription engine.
@@ -54,13 +55,14 @@ class ScanResultScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Crop-health result',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CitadelLogo(size: 34),
+            SizedBox(width: 8),
+            Text('Crop-health result', style: TextStyle(
+              color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
         ),
         centerTitle: true,
         actions: const [ProfileAvatarButton(size: 32)],

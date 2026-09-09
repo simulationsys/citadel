@@ -6,6 +6,7 @@ import '../../core/config/app_language.dart';
 import '../../core/config/app_settings_provider.dart';
 import '../../core/config/app_strings.dart';
 import '../../core/theme/app_colors.dart';
+import '../../widgets/citadel_logo.dart';
 
 /// Data model for a single onboarding page.
 class _PageData {
@@ -134,15 +135,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   // Logo
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryGreen,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Icon(Icons.agriculture,
-                            color: Colors.white, size: 18),
-                      ),
+                      const CitadelLogo(size: 34),
                       const SizedBox(width: 8),
                       Text(
                         'Citadel',

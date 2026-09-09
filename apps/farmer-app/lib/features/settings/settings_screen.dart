@@ -7,6 +7,7 @@ import '../../core/config/edge_config.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/repositories/http_farm_state_repository.dart';
+import '../../widgets/citadel_logo.dart';
 
 /// Settings screen — language toggle, edge API URL, connection test.
 ///
@@ -50,7 +51,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CitadelLogo(size: 36),
+            SizedBox(width: 8),
+            Text('Settings'),
+          ],
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [

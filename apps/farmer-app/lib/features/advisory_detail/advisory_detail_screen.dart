@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/repositories/farm_state_repository.dart';
 import '../../widgets/app_bottom_nav.dart';
+import '../../widgets/citadel_logo.dart';
 import '../../widgets/profile_avatar_button.dart';
 
 class AdvisoryDetailScreen extends StatefulWidget {
@@ -14,44 +15,9 @@ class AdvisoryDetailScreen extends StatefulWidget {
   @override
   State<AdvisoryDetailScreen> createState() => _AdvisoryDetailScreenState();
 }
-
 class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
   bool _isApproved = false;
   bool _isSubmitting = false;
-
-  void _showMicDialog(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.mic, color: AppColors.primaryGreen, size: 48),
-            const SizedBox(height: 16),
-            const Text(
-              'Voice Assistant Active',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Ask any advisory question: "Should I approve irrigation for Plot A?"',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showNodeDetails(BuildContext context) {
     showDialog(
@@ -69,10 +35,10 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
-            Text('• Location: Field 1: Plot A Cotton'),
-            Text('• Sensor Depth: 15cm Root Zone'),
-            Text('• Signal Strength: Excellent (-62 dBm)'),
-            Text('• Valve Controller: Drip Valve #3 Ready'),
+            Text('â€¢ Location: Field 1: Plot A Cotton'),
+            Text('â€¢ Sensor Depth: 15cm Root Zone'),
+            Text('â€¢ Signal Strength: Excellent (-62 dBm)'),
+            Text('â€¢ Valve Controller: Drip Valve #3 Ready'),
           ],
         ),
         actions: [
@@ -84,7 +50,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
 
   /// Approve irrigation.
   ///
-  /// This used to be `setState(() => _isApproved = true)` and nothing else —
+  /// This used to be `setState(() => _isApproved = true)` and nothing else â€”
   /// the screen reported "Irrigation Approved" without ever contacting the
   /// edge node. The banner now flips only after the backend confirms the
   /// approval and hands back the standing relay command.
@@ -104,7 +70,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: AppColors.severityCritical,
         content: Text(provider.irrigationError ??
-            'Irrigation was NOT approved — the field node did not confirm.'),
+            'Irrigation was NOT approved â€” the field node did not confirm.'),
       ));
       return;
     }
@@ -169,14 +135,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
       automaticallyImplyLeading: false,
       title: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primaryGreen,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.agriculture, color: Colors.white, size: 24),
-          ),
+          const CitadelLogo(size: 42),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -194,7 +153,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                     const SizedBox(width: 4),
                     const Expanded(
                       child: Text(
-                        'Online • Synced',
+                        'Online â€¢ Synced',
                         style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -207,20 +166,6 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
         ],
       ),
       actions: [
-        Container(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 2)),
-            ],
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.mic, color: AppColors.primaryGreen, size: 20),
-            onPressed: () => _showMicDialog(context),
-          ),
-        ),
         const ProfileAvatarButton(margin: EdgeInsets.only(right: 16, left: 12)),
       ],
     );
@@ -375,7 +320,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                     children: const [
                       Text('High Evaporation Forecast', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                       SizedBox(height: 2),
-                      Text('0% Rain expected in 48h • Soil dries rapidly', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      Text('0% Rain expected in 48h â€¢ Soil dries rapidly', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
@@ -639,7 +584,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                   children: [
                     const Text('Valve Hardware\nState', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     Text(
-                      _isApproved ? 'Armed • Ready for 05:30 PM' : 'Closed • Awaiting\nCommand',
+                      _isApproved ? 'Armed â€¢ Ready for 05:30 PM' : 'Closed â€¢ Awaiting\nCommand',
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 12,
@@ -675,7 +620,6 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
   }
 
 }
-
 class _ArcPainter extends CustomPainter {
   final double percentage; // 0.0 to 1.0
 

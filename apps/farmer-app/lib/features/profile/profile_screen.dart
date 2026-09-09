@@ -11,6 +11,7 @@ import '../../core/theme/app_colors.dart';
 import '../../data/repositories/farm_state_repository.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/freshness_banner.dart';
+import '../../widgets/citadel_logo.dart';
 
 /// Farmer profile — allows editing farmer info, location, profile picture,
 /// and adding/managing Indian regional crops.
@@ -282,9 +283,13 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text(
-          AppStrings.translate('Profile', settings.language),
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            const CitadelLogo(size: 36),
+            const SizedBox(width: 8),
+            Text(AppStrings.translate('Profile', settings.language),
+              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+          ],
         ),
       ),
       body: ListView(
