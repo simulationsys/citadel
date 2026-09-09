@@ -795,10 +795,13 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: const BoxDecoration(
                 color: Colors.grey,
                 borderRadius: BorderRadius.only(topLeft: Radius.circular(16), bottomLeft: Radius.circular(16)),
+                image: DecorationImage(
+                  image: AssetImage('assets/images/wheat_crop.jpg'),
+                  fit: BoxFit.cover,
+                ),
               ),
               child: Stack(
                 children: [
-                  const Center(child: Icon(Icons.image, color: Colors.white70)),
                   Positioned(
                     bottom: 8,
                     left: 8,
