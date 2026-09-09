@@ -1,6 +1,10 @@
+import json
 import os
+import subprocess
+import sys
+import tempfile
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -86,6 +90,59 @@ def record_reading(payload: SensorReadingInput):
 def record_vision_result(payload: VisionResultInput):
     saved_vision = save_vision_result(payload.model_dump(exclude_unset=True))
     return saved_vision
+
+# Repo root: apps/dashboard/backend -> apps/dashboard -> apps -> repo root
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+VISION_INFERENCE_SCRIPT = os.path.join(REPO_ROOT, "ml", "vision", "src", "inference.py")
+
+@app.post("/v1/crop-health")
+async def crop_health(request: Request, zoneId: str = "zone-a"):
+    """Runs a farmer-submitted leaf photo through the crop-health AI model.
+
+    Accepts raw JPEG bytes (matches the farmer app's HttpFarmStateRepository,
+    which POSTs `image/jpeg` bytes directly, not a multipart form).
+    """
+    image_bytes = await request.body()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="No image bytes in request body.")
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+            tmp.write(image_bytes)
+            tmp_path = tmp.name
+
+        proc = subprocess.run(
+            [sys.executable, VISION_INFERENCE_SCRIPT, tmp_path],
+            capture_output=True, text=True, timeout=60,
+        )
+
+        if proc.returncode != 0:
+            # Model/dependency failure (e.g. TF not installed) — degrade
+            # gracefully instead of a 500 so the app's scan flow still works.
+            result = {
+                "kind": "crop_health", "crop": "unknown", "label": "inconclusive",
+                "confidence": 0.0, "imageQuality": "poor",
+                "limitation": f"Vision inference unavailable: {proc.stderr.strip()[-300:]}",
+            }
+        else:
+            result = json.loads(proc.stdout.strip().splitlines()[-1])
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, IndexError) as e:
+        result = {
+            "kind": "crop_health", "crop": "unknown", "label": "inconclusive",
+            "confidence": 0.0, "imageQuality": "poor",
+            "limitation": f"Vision inference failed: {e}",
+        }
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+    # Persist real, successful diagnoses so they show as "latestVision" on
+    # the dashboard/farm-state too. Don't persist inconclusive/error results.
+    if result.get("label") not in ("inconclusive", "invalid_image"):
+        save_vision_result(result)
+
+    return result
 
 @app.post("/v1/actuator-command")
 def trigger_actuator(payload: ActuatorCommandInput):

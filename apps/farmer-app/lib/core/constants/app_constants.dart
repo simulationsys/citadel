@@ -3,7 +3,11 @@ class AppConstants {
   AppConstants._();
 
   /// Default edge API base URL (local network).
-  static const String defaultEdgeApiUrl = 'http://localhost:3001';
+  /// Points at the Python dashboard backend (port 3000), which is what the
+  /// ESP32 field node currently posts readings to and has real persistence.
+  /// The Node edge-api on port 3001 exists but isn't wired to the ESP32 yet —
+  /// see docs/backend-integration.md for the plan to consolidate onto 3001.
+  static const String defaultEdgeApiUrl = 'http://192.168.1.31:3000';
 
   /// Polling interval for farm state refresh.
   static const Duration pollInterval = Duration(seconds: 30);

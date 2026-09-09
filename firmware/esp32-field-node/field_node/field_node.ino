@@ -5,14 +5,16 @@
 // Always prints JSON over Serial; also POSTs to the edge API if Wi-Fi connects.
 
 #include <DHT.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
 
 // ── Wi-Fi + edge API (fill in once you're ready to connect over the network) ──
-const char* WIFI_SSID    = "YOUR_WIFI_NAME";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
-const char* EDGE_API_URL  = "http://192.168.1.100:3001/v1/readings"; // laptop's LAN IP for now
+const char* WIFI_SSID    = "Excitel 4G";
+const char* WIFI_PASSWORD = "11223344";
+const char* EDGE_API_URL  = "http://192.168.1.31:3000/v1/readings"; // Python dashboard backend — has the real DB + UI (port 3001 is the older Node service, not wired to the dashboard yet)
 const char* DEVICE_ID     = "field-node-01";
 const char* ZONE_ID       = "zone-a";
-const bool  WIFI_ENABLED  = false; // flip to true once WIFI_SSID/PASSWORD are set
+const bool  WIFI_ENABLED  = true; // flip to true once WIFI_SSID/PASSWORD/EDGE_API_URL are set
 
 // ── Pins ─────────────────────────────────────────────────────────────────
 const int STATUS_LED_PIN    = 2; // onboard LED on most ESP32 DevKit boards; harmless if unused
@@ -55,6 +57,17 @@ float readWaterLevelPct() {
   return constrain(pct, 0.0, 100.0);
 }
 
+bool connectWiFi() {
+  if (WiFi.status() == WL_CONNECTED) return true;
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    delay(500);
+    attempts++;
+  }
+  return WiFi.status() == WL_CONNECTED;
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -66,6 +79,14 @@ void setup() {
   digitalWrite(RELAY_PIN, LOW); // pump off by default — safety first
 
   dht.begin();
+
+  if (WIFI_ENABLED) {
+    if (connectWiFi()) {
+      Serial.printf("Wi-Fi connected. IP: %s\n", WiFi.localIP().toString().c_str());
+    } else {
+      Serial.println("Wi-Fi unavailable — continuing with Serial output only.");
+    }
+  }
 
   Serial.println("Citadel field node initialized (DHT11, HC-SR04, relay wired; soil + rain pending).");
 }
@@ -109,6 +130,19 @@ void loop() {
   );
 
   Serial.println(jsonPayload);
+
+  if (WIFI_ENABLED && connectWiFi()) {
+    HTTPClient http;
+    http.begin(EDGE_API_URL);
+    http.addHeader("Content-Type", "application/json");
+    int httpCode = http.POST(jsonPayload);
+    if (httpCode == 201) {
+      Serial.println("→ Edge API accepted reading.");
+    } else {
+      Serial.printf("→ Edge API error: %d\n", httpCode);
+    }
+    http.end();
+  }
 
   digitalWrite(STATUS_LED_PIN, !digitalRead(STATUS_LED_PIN));
 }

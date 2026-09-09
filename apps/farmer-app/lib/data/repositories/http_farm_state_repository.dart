@@ -13,12 +13,15 @@ import 'farm_state_repository.dart';
 /// HTTP implementation that talks to the edge API over the LAN so a physical
 /// phone can stay "connected with phone".
 ///
-/// Endpoints used (see `services/edge-api/src/index.js`):
+/// Endpoints used (see `apps/dashboard/backend/main.py` — the Python
+/// dashboard backend, which is what the ESP32 field node actually posts
+/// sensor readings to; the older Node `services/edge-api` is not wired to
+/// the ESP32 and isn't used by the app either — see docs/backend-integration.md):
 /// - `GET /health`
 /// - `GET /v1/farm-state?zoneId=<zone>`
 /// - `POST /v1/readings` (not used by UI yet)
-/// - `POST /v1/crop-health?zoneId=<zone>` (raw JPEG bytes)
-/// - `POST /v1/irrigation/requests` + `POST /v1/irrigation/requests/:id/approve`
+/// - `POST /v1/crop-health?zoneId=<zone>` (raw JPEG bytes, runs the real crop-health AI model)
+/// - `POST /v1/actuator-command` (direct relay command — no separate approve step on this backend)
 ///
 /// Offline-first: the last good `FarmState` JSON is cached in
 /// SharedPreferences. On fetch failure the cached state is returned instead
@@ -122,26 +125,22 @@ class HttpFarmStateRepository implements FarmStateRepository {
 
   @override
   Future<void> approveIrrigation(String action, {required bool approved}) async {
-    // Record an irrigation request; approval endpoint needs a request id, so
-    // we create-then-approve. Failures are swallowed (queued offline).
+    // Talks to the Python backend's single actuator-command endpoint
+    // (apps/dashboard/backend/main.py `POST /v1/actuator-command`) — there's
+    // no separate create-then-approve request flow on this backend, just a
+    // direct relay command. Approved -> start the pump; declined -> make
+    // sure it's off. Failures are swallowed (queued offline, MVP behaviour).
     try {
-      final createUri = Uri.parse('$_root/v1/irrigation/requests');
-      final created = await http
-          .post(createUri,
+      final uri = Uri.parse('$_root/v1/actuator-command');
+      await http
+          .post(uri,
               headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({'zoneId': zoneId, 'requestedBy': 'farmer-app:$action'}))
+              body: jsonEncode({
+                'actuatorId': 'pump-relay-01',
+                'action': approved ? 'START_IRRIGATION' : 'STOP_IRRIGATION',
+                'requestedBy': 'farmer-app:$action',
+              }))
           .timeout(timeout);
-      if (created.statusCode != 201) return;
-      final id = (jsonDecode(created.body) as Map)['request']?['id'] as String?;
-      if (id == null) return;
-      if (approved) {
-        final approveUri = Uri.parse('$_root/v1/irrigation/requests/$id/approve');
-        await http
-            .post(approveUri,
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode({'approvedBy': 'farmer'}))
-            .timeout(timeout);
-      }
     } catch (_) {
       // Offline — action stays queued locally (no-op for MVP).
     }

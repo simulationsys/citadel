@@ -1,0 +1,18 @@
+# Optional — only needed for POST /v1/crop-health (the AI leaf-scan endpoint).
+# The core dashboard (readings, advisories, relay control) runs fine without
+# these; install them only once you want real crop-health results instead of
+# the graceful "inconclusive" fallback.
+#
+# This is a lighter subset of ml/vision/requirements.txt — that file also
+# pulls in scikit-learn/albumentations/tqdm for *training*, which inference
+# doesn't need.
+#
+# NOTE for Raspberry Pi 3B+ (1GB RAM): full TensorFlow is heavy. Expect a
+# slow `pip install` and a slow first inference (the subprocess reloads the
+# model from scratch on every request — there is no in-process model cache).
+# If it's too slow or fails to install on the Pi, test/run this endpoint
+# from a laptop instead, or point EDGE_API_URL's /v1/crop-health calls at a
+# separate, more capable machine running this same backend.
+tensorflow>=2.16,<2.18
+opencv-python-headless>=4.9,<5
+numpy>=1.26,<3
