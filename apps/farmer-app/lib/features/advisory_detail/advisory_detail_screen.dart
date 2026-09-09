@@ -1,8 +1,10 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../data/repositories/farm_state_repository.dart';
 import '../../widgets/app_bottom_nav.dart';
 
 class AdvisoryDetailScreen extends StatefulWidget {
@@ -14,6 +16,7 @@ class AdvisoryDetailScreen extends StatefulWidget {
 
 class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
   bool _isApproved = false;
+  bool _isSubmitting = false;
 
   void _showMicDialog(BuildContext context) {
     showModalBottomSheet(
@@ -78,8 +81,42 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
     );
   }
 
-  void _handleApprove() {
-    setState(() => _isApproved = true);
+  /// Approve irrigation.
+  ///
+  /// This used to be `setState(() => _isApproved = true)` and nothing else —
+  /// the screen reported "Irrigation Approved" without ever contacting the
+  /// edge node. The banner now flips only after the backend confirms the
+  /// approval and hands back the standing relay command.
+  Future<void> _handleDecision({required bool approved}) async {
+    final provider = context.read<FarmStateProvider>();
+    if (provider.isIrrigationBusy) return; // no double-taps
+
+    setState(() => _isSubmitting = true);
+    final ok = await provider.handleIrrigation(approved: approved);
+    if (!mounted) return;
+    setState(() {
+      _isSubmitting = false;
+      _isApproved = ok && approved;
+    });
+
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        backgroundColor: AppColors.severityCritical,
+        content: Text(provider.irrigationError ??
+            'Irrigation was NOT approved — the field node did not confirm.'),
+      ));
+      return;
+    }
+
+    if (!approved) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Declined. The pump was not commanded.'),
+      ));
+      Navigator.pop(context);
+      return;
+    }
+
+    final command = provider.lastIrrigationOutcome?.command;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -88,12 +125,18 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
           children: const [
             Icon(Icons.check_circle, color: AppColors.primaryGreen),
             SizedBox(width: 8),
-            Text('Irrigation Approved'),
+            Expanded(child: Text('Irrigation Approved')),
           ],
         ),
-        content: const Text(
-          'Drip Valve #3 scheduled to open at 05:30 PM for 45 minutes (1,200 Liters). Command sent to edge controller.',
-        ),
+        // Deliberately precise: the approval is recorded and a command is
+        // waiting. The pump has not run until the node collects that command
+        // and acknowledges it on its next reading.
+        content: Text(command == null
+            ? 'Approval recorded by the field node.'
+            : 'Approval recorded. The field node will start '
+              '${command.actuatorId} for up to '
+              '${(command.maxRuntimeSec / 60).round()} minutes when it next '
+              'checks in, and will report back once the relay is on.'),
         actions: [
           ElevatedButton(
             onPressed: () {
@@ -480,12 +523,9 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Advisory declined.')),
-                    );
-                    Navigator.pop(context);
-                  },
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => _handleDecision(approved: false),
                   icon: const Icon(Icons.close),
                   label: const Text('Decline'),
                   style: OutlinedButton.styleFrom(
@@ -498,9 +538,20 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: _handleApprove,
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: Text(_isApproved ? 'Approved' : 'Approve'),
+                  onPressed: _isSubmitting
+                      ? null
+                      : () => _handleDecision(approved: true),
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 16, height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.check_circle_outline),
+                  label: Text(_isSubmitting
+                      ? 'Sending...'
+                      : _isApproved
+                          ? 'Approved'
+                          : 'Approve'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryGreenDark,
                     padding: const EdgeInsets.symmetric(vertical: 14),

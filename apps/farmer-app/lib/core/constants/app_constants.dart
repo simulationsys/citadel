@@ -11,13 +11,16 @@ class AppConstants {
   /// Polling interval for farm state refresh.
   static const Duration pollInterval = Duration(seconds: 30);
 
-  /// Data freshness thresholds.
+  /// Data freshness thresholds. Mirrors FRESH_SEC/STALE_SEC in
+  /// services/edge-api/app/main.py. The server's `freshness` field is
+  /// authoritative; these are only a client-side fallback.
   static const Duration freshThreshold = Duration(minutes: 2);
   static const Duration staleThreshold = Duration(minutes: 15);
 
-  /// Advisory types (mirrors packages/contracts/src/events.js).
+  /// Advisory types. Owned by `citadel_pest_risk.risk_engine.ADVISORY_TYPES`
+  /// and published in `/openapi.json`. Note `disease_risk`, not `disease`.
   static const String typeIrrigation = 'irrigation';
-  static const String typeDisease = 'disease';
+  static const String typeDisease = 'disease_risk';
   static const String typePest = 'pest';
   static const String typeHeat = 'heat';
   static const String typeFlood = 'flood';

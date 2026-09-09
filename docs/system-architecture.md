@@ -12,8 +12,8 @@ Offline-first smart-farming platform. Nothing in the live path depends on the in
 | DHT11 temp + humidity | 1-wire digital, internal pull-up | GPIO4 | Live (~28 °C, ~75 % RH) |
 | HC-SR04 ultrasonic (tank/water level) | TRIG out / ECHO in | GPIO32 / GPIO33 | Live. ECHO through a 1 kΩ + 2 kΩ divider (3× 1 kΩ) — 5 V → 3.3 V |
 | Relay module (irrigation pump control) | digital out | GPIO26 | Control side live, held LOW on boot (pump OFF by default). Load side / pump **not wired** |
-| Capacitive soil-moisture v1.2 | analog (ADC1) | GPIO34 | **Not purchased.** Pin floats → reports a meaningless 100 % |
-| Tipping-bucket rain gauge | interrupt/pulse | GPIO15 reserved | **Not available.** Firmware hardcodes `rainfallMm: 0` |
+| Capacitive soil-moisture v1.2 | analog (ADC1) | GPIO34 | **Not purchased.** `SOIL_SENSOR_WIRED = false`; the field is omitted from the payload |
+| Tipping-bucket rain gauge | interrupt/pulse | GPIO15 reserved | **Not available.** `RAIN_GAUGE_WIRED = false`; field omitted |
 | Status LED | digital out | GPIO2 | Onboard |
 | Power | 5 V rail + GND rail | — | Pi powered from a 2.1 A power-bank port (a weaker source caused a reproducible under-voltage boot failure) |
 
@@ -21,55 +21,75 @@ Offline-first smart-farming platform. Nothing in the live path depends on the in
 
 **Firmware loop** (`firmware/esp32-field-node/field_node/field_node.ino`), every 10 s:
 
-1. Read soil ADC → calibrated % (`SOIL_DRY_VALUE 3200` / `SOIL_WET_VALUE 1400`).
-2. Read DHT11 → temp/humidity; on NaN, substitute 25 °C / 50 % and flag `sensorStatus.dht = "error"`.
-3. Read HC-SR04 → distance → tank % (`TANK_EMPTY_CM 100` / `TANK_FULL_CM 10`); pulse timeout → flag `ultrasonic: "error"`.
-4. Serialize one JSON payload and always print it to Serial @115200 (works with no network at all).
-5. If Wi-Fi is up, HTTP POST it to `EDGE_API_URL`. Serial is the fallback transport — it is never skipped.
+**Dead-man timer** runs first, every loop iteration, ungated by the network or
+the post interval. Then, every 10 s:
 
-Payload contract:
+1. Mint a stable `eventId` (`deviceId-bootNonce-counter`) for this sample.
+2. Read each sensor. **A failed or absent sensor is omitted from the payload**,
+   never substituted — a fabricated 25 °C is indistinguishable to the risk
+   engine from a real one, and a floating soil pin reading ~100 % would suppress
+   the irrigation advisory it is meant to trigger.
+3. Attach `relayReported` — the node's acknowledgement of its own relay.
+4. Print the JSON to Serial @115200, then POST it if Wi-Fi is up.
+5. On 201 (stored) **or** 200 (duplicate replay), parse the `command` in the
+   response body and apply it. A malformed, unknown-actuator, or
+   out-of-range command is ignored; nothing here can turn the relay ON from
+   bad input.
+
+Payload contract (soil and rainfall absent because those sensors are not wired):
 
 ```json
-{"deviceId":"field-node-01","zoneId":"zone-a","soilMoisturePct":100.0,
- "temperatureC":28.6,"humidityPct":73.2,"rainfallMm":0.0,"waterLevelPct":0.0,
- "sensorStatus":{"dht":"ok","ultrasonic":"ok"}}
+{"eventId":"field-node-01-3f2a91cc-00000042","deviceId":"field-node-01",
+ "zoneId":"zone-a","temperatureC":28.6,"humidityPct":73.2,
+ "waterLevelPct":0.0,"relayReported":"OFF"}
 ```
+
+There is **no persistent retry queue**: a reading whose POST fails is dropped,
+and the next interval is a genuinely new sample.
 
 ---
 
 ## Layer 1 — Edge services (on the Pi)
 
-Two backends exist today; the ESP32 currently posts to the **Python** one.
+> Updated 2026-09-10. The dual-backend split described in earlier revisions is
+> gone: `apps/dashboard/backend` (port 3000) and the Node `services/edge-api`
+> were consolidated into one FastAPI service on **port 3001** (commit `3b7dc01`).
 
-### A. Python dashboard/edge API — `apps/dashboard/backend`, port **3000** (the live path)
+### Edge API — `services/edge-api`, port **3001** (the only backend)
 
-FastAPI + SQLite (`farm.db`), also serves the dashboard UI from `static/`.
+FastAPI + SQLite (`farm.db`, WAL), serves the dashboard from `static/index.html`.
 
-- `POST /v1/readings` — ingest, persist, return full farm state
-- `GET /v1/farm-state` — latest reading + advisories + relay state + latest vision result
-- `GET /v1/history?limit=N`
-- `POST /v1/crop-health` — raw JPEG bytes → subprocess into `ml/vision/src/inference.py`; persists non-inconclusive diagnoses
-- `POST /v1/vision-results`
-- `POST /v1/actuator-command` — `START_IRRIGATION` / `STOP_IRRIGATION` / `TOGGLE`, audited in `actuator_logs`
-- `GET /health`
+- `POST /v1/readings` — node uplink. 201 stored / 200 duplicate replay; both
+  responses carry the relay `command`
+- `GET /v1/farm-state?zoneId=` — reading, **server-computed `freshness`**,
+  observations, advisories, actuator, pending requests
+- `GET /v1/history`, `GET /v1/zones`, `GET /health`
+- `POST /v1/crop-health?zoneId=` — multipart, field `image`
+- `POST /v1/observations`
+- `POST /v1/irrigation/requests` + `/{id}/approve` + `/{id}/decline`
+- `POST /v1/actuator-command` — audited manual override
+- `POST /v1/pest/analyze` — always 503; no pest model exists
 
-Tables: `readings`, `vision_results`, `actuator_logs`, `actuator_state`. Advisories come from `advisory_engine.build_advisories(reading, latest_vision)`.
+Tables: `readings`, `observations`, `actuator_state`, `actuator_logs`,
+`irrigation_requests`. Every table carries `synced_at` for cloud push.
 
-### B. Node edge API — `services/edge-api`, port **3001** (parallel implementation, in-memory)
+Advisories come from `app/advisories.py`, which is a shape adapter only — the
+thresholds live in `citadel_pest_risk.profiles`, so there is exactly one copy of
+the rules.
 
-`FarmStore` in memory, zone-aware, plus an irrigation *request/approve* workflow that is explicitly **not** a pump command. Calls the pest-risk service at `RISK_SERVICE_URL` with a 1.2 s timeout and falls back to `buildFallbackAdvisories()` on any failure. Endpoints: `/v1/zones`, `/v1/farm-state`, `/v1/history`, `/v1/readings`, `/v1/observations`, `/v1/irrigation/requests[/:id/approve]`, `/v1/crop-health`.
+### Pest & risk rules — `ml/pest-risk` (installed as `citadel_pest_risk`)
 
-> These two are a known duplication — `docs/backend-integration.md` tracks consolidating onto one.
+Pure-stdlib rules engine, imported in-process by the edge API. Also exposes its
+own FastAPI surface on port 8001 for standalone use. Covers water stress, heat
+stress, humidity-driven disease-inspection prompts, flood risk and pest
+activity. The TFLite pest detector is absent and reports `503 model_not_ready`
+rather than pretending.
 
-### C. Pest & risk intelligence — `ml/pest-risk`, port **8001**
+### Cloud API — `services/cloud-api`, port **3002**
 
-FastAPI over a pure-Python rules engine (zero third-party runtime deps for evaluation): `/v1/risk/evaluate`, `/v1/pest/analyze`, `/v1/farm-state`, `/v1/profiles`, `/health`. Covers water stress, heat stress, humidity-driven disease-inspection prompts, flood risk and pest activity, against crop profiles (`tomato-demo`). The TFLite pest detector is optional and returns `503 model_not_ready` until a real `pest_detector.tflite` + `labels.txt` are supplied — it never fakes availability.
-
-### D. Cloud API — `services/cloud-api`, port **3002**
-
-Placeholder only. Intended role: durable multi-farm storage and accepting delayed edge sync batches.
-
----
+Real, with a `/v1/sync/batch` endpoint and tests. The edge node pushes to it
+only when `CITADEL_CLOUD_URL` is set; unset (the default) means the background
+task never starts. **Not demonstrated end to end.**
 
 ## Layer 2 — Vision model
 
@@ -85,29 +105,51 @@ Dataset pipeline in `src/dataset/`: download → clean → dedup → preprocess 
 
 **Farmer mobile app** — Flutter (`apps/farmer-app`), Android + iOS. Screens: home, scan (camera → crop health), scan result, advisory detail, history, profile, settings.
 
-The data layer is the interesting part — `HybridFarmStateRepository`:
+Offline policy, by data type:
 
-1. try `HttpFarmStateRepository` (live edge API),
-2. which itself serves a SharedPreferences cache before throwing,
-3. and only on first-run-offline falls through to `MockFarmStateRepository`.
+- **Farm state** falls back to a SharedPreferences cache, returned marked
+  `fromCache` so the UI labels it stale. It is never presented as live.
+- **Crop scans and irrigation decisions do not fall back.** They surface the
+  error. There is no truthful offline answer to "what disease is this?" or
+  "did the pump turn on?", and the silent mock fallback that used to answer
+  both was removed.
 
-So the UI never goes blank. Base URL and zone are user-editable in Settings (`EdgeConfig`, default `http://192.168.1.31:3000`). Polls every 30 s; the freshness banner turns stale at 2 min, critical at 15 min.
+Every sensor field is nullable; a missing one renders as `--`, not as a
+plausible number. Base URL and zone are editable in Settings (`EdgeConfig`,
+default `http://192.168.1.31:3001`). Polls every 30 s; freshness comes from the
+server's `freshness` field rather than a client-side timer.
 
-**Dashboard** — static HTML/JS served by the Python backend at `/`; a Node dev server also exists at `apps/dashboard/src/server.js`.
+**Dashboard** — static HTML/JS served by the edge API at `/`, same-origin.
 
-**Shared contracts** — `packages/contracts/src/events.js`: `createSensorReading()` and the advisory type enum (`irrigation, disease, pest, heat, flood`), mirrored by hand in the Flutter `AppConstants`.
+**Advisory vocabulary** — owned by `citadel_pest_risk.risk_engine.ADVISORY_TYPES`
+and published in `/openapi.json`: `flood, irrigation, heat, disease_risk, pest`.
+`packages/contracts/src/events.js` is a legacy JS mirror and is no longer the
+source of truth.
 
 ---
 
 ## End-to-end flows
 
-**Telemetry:** sensors → ESP32 (10 s) → Wi-Fi HTTP POST → Pi `:3000/v1/readings` → SQLite → advisory engine → farm state → dashboard + phone poll (30 s).
+**Telemetry:** sensors → ESP32 (10 s) → Wi-Fi POST → Pi `:3001/v1/readings` →
+SQLite → rules engine → farm state → dashboard + phone poll (30 s).
 
-**Crop scan:** farmer photographs a leaf → app POSTs JPEG bytes → `/v1/crop-health` → subprocess TFLite inference → quality gate + confidence policy → persisted as a vision result → advisory → back to the app.
+**Crop scan:** farmer photographs a leaf → app POSTs **multipart** (`image`) →
+`/v1/crop-health` → subprocess TFLite inference → quality gate, then confidence
+policy → observation persisted → back to the app. Infrastructure failure returns
+503/502/504 and is shown as unavailable, never as a diagnosis.
 
-**Irrigation (human-in-the-loop):** advisory raised → farmer/operator approves → `POST /v1/actuator-command` → `actuator_state` + `actuator_logs`. The relay defaults OFF on every boot. In the Node API, request/approve records are deliberately *not* pump commands — firmware must acknowledge physical action separately.
+**Irrigation (human-in-the-loop), the full loop:**
+advisory (changes nothing) → request created (changes nothing) → **farmer
+approves** → desired state ON, audited → command rides the node's next reading
+response → node validates and applies it, arming its own local timer → node
+reports `relayReported: "ON"` on the following reading → desired and reported
+in sync. Both the server and the firmware independently enforce the runtime
+limit; neither is trusted as the only shutoff.
 
-**Degradation ladder:** no cloud → still fully functional · no Wi-Fi → ESP32 keeps printing to Serial and the phone serves its cache · pest service down → edge fallback rules · vision model missing → `inconclusive`, not a crash · sensor NaN → safe defaults plus a `sensorStatus` error flag.
+**Degradation ladder:** no cloud → fully functional (sync is off by default) ·
+no Wi-Fi → ESP32 keeps printing to Serial and running its dead-man timer, phone
+serves its cache marked stale · vision runtime missing → 503, visible, not a
+fake `inconclusive` · sensor failed → field omitted, so no rule fires on it.
 
 ---
 
@@ -115,8 +157,7 @@ So the UI never goes blank. Base URL and zone are user-editable in Settings (`Ed
 
 | Port | Service |
 |---|---|
-| 3000 | Python edge/dashboard API + dashboard UI (**live path**) |
-| 3001 | Node edge API |
-| 3002 | Cloud API (placeholder) |
-| 8001 | Pest & risk intelligence |
-| 115200 baud | ESP32 serial fallback |
+| 3001 | Edge API + dashboard UI (**the only backend**) |
+| 3002 | Cloud API (optional sync target, off by default) |
+| 8001 | Pest & risk rules, standalone FastAPI surface |
+| 115200 baud | ESP32 serial output |

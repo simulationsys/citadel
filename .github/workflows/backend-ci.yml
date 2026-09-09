@@ -63,3 +63,24 @@ jobs:
           pip install -r requirements.txt
       - name: Run tests
         run: python -m unittest discover -s tests -v
+
+  crop-health:
+    name: Crop-Health Inference
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ml/vision
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # Deliberately NOT requirements.txt: these tests drive the interpreter
+      # through a fake, so neither TensorFlow nor tflite-runtime is needed, and
+      # installing the training stack would add minutes to every run.
+      - name: Install inference test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "opencv-python-headless>=4.9,<5" "numpy>=1.26,<3"
+      - name: Run tests
+        run: python -m unittest discover -s tests -v

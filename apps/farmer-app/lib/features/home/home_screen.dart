@@ -368,7 +368,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildGreetingSection(Reading? reading, AppSettingsProvider settings) {
-    final temp = reading != null ? '${reading.temperatureC.toStringAsFixed(0)}°C' : '34°C';
+    // `--` when the node did not report. Never a plausible stand-in number.
+    final temp = '${Reading.display(reading?.temperatureC)}°C';
     final greeting = settings.isHindi ? 'सुप्रभात,\n${settings.userName}' : 'Good\nMorning,\n${settings.userName}';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,10 +627,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSensorsGrid(Reading? reading) {
-    final moisture = reading != null ? '${reading.soilMoisturePct.toStringAsFixed(0)}%' : '64%';
-    final temp = reading != null ? '${reading.temperatureC.toStringAsFixed(0)}°C' : '31°C';
-    final humidity = reading != null ? '${reading.humidityPct.toStringAsFixed(0)}%' : '58%';
-    final moistureOk = reading == null || reading.soilMoisturePct >= 40;
+    // A missing sensor shows `--`. The previous hardcoded fallbacks ('64%',
+    // '31°C') made an unreporting node look like a healthy one.
+    final moisture = '${Reading.display(reading?.soilMoisturePct)}%';
+    final temp = '${Reading.display(reading?.temperatureC)}°C';
+    final humidity = '${Reading.display(reading?.humidityPct)}%';
+    final soil = reading?.soilMoisturePct;
+    final moistureOk = soil == null || soil >= 40;
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

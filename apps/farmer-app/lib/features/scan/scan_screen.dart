@@ -127,12 +127,27 @@ class _ScanScreenState extends State<ScanScreen> {
       if (!mounted) return;
       setState(() => _isAnalysing = false);
 
+      // An infrastructure failure has no result to show. Surfacing the error
+      // is the point: a fabricated "inconclusive" would make a dead AI
+      // pipeline look like a working one that simply wasn't sure.
+      final result = provider.lastScanResult;
+      if (result == null) {
+        final failure = provider.lastScanError;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          backgroundColor: AppColors.severityCritical,
+          duration: const Duration(seconds: 6),
+          content: Text(failure?.farmerMessage ??
+              'The scan could not be completed. Please try again.'),
+        ));
+        return;
+      }
+
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => ScanResultScreen(
             imageFile: File(picked.path),
-            result: provider.lastScanResult!,
+            result: result,
           ),
         ),
       );
