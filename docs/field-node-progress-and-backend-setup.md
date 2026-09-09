@@ -3,6 +3,8 @@
 > Log of the wiring + backend setup sessions. Read this before touching hardware or the Pi again.
 >
 > **Status as of the latest session: the full pipeline is live.** ESP32 sensors → Wi-Fi → Raspberry Pi (Python edge API + SQLite) → Dashboard UI, confirmed working end to end with real hardware readings, entirely over local Wi-Fi with no internet dependency.
+>
+> **Superseding update:** the team's `dev` branch landed the backend consolidation while this doc was being written (see Section 8). `apps/dashboard/backend` (port 3000) no longer exists — everything now lives in `services/edge-api` on **port 3001**. Sections 3.7, 5, and 6 below describe the port-3000 setup as it happened at the time; treat **port 3001** as current truth everywhere, and read Section 8 first if you're picking this up fresh.
 
 ---
 
@@ -45,7 +47,7 @@ We don't have this exact 38-pin ESP32 in a Tinkercad-style simulator, so this is
 - Reads: soil moisture (GPIO34, sensor pending), DHT11 (GPIO4), HC-SR04 (GPIO32/33), holds relay (GPIO26) LOW
 - Rain gauge hardcoded to `0.0` (not wired)
 - **Wi-Fi is enabled and connected** (`WIFI_ENABLED = true`) — Wi-Fi connect + HTTP POST code is in place (`WiFi.h` + `HTTPClient.h`, both built into the ESP32 board package). Confirmed posting successfully to the edge API on every 10s cycle.
-- `EDGE_API_URL` currently points to **port 3000** (the Python dashboard backend), not 3001 — see Section 5 for why.
+- `EDGE_API_URL` now points to **port 3001** (`services/edge-api`, the consolidated backend — see Section 8). It briefly pointed at port 3000 mid-session before the team's `dev` branch consolidation was discovered; that's now corrected.
 
 Sample live output confirmed, successfully reaching the backend:
 ```json
@@ -167,13 +169,48 @@ Installing the AI dependencies took a couple of minutes even on a full laptop; *
 
 ---
 
-## 7. Open items for later sessions
+## 8. Reconciling with `dev`'s backend consolidation
 
+When pushing this session's work to the team's shared `dev` branch (`simulationsys/citadel`), discovered the team had **already executed** the exact consolidation plan `docs/backend-integration.md` describes — merged in ahead of this session's commits. This supersedes Sections 3.7, 5, and 6 above. Corrected everything to match:
+
+**What changed on `dev`:**
+- `apps/dashboard/` is **deleted entirely** — no more port 3000, no more separate Node `services/edge-api`.
+- Everything is unified into `services/edge-api/app/` (FastAPI + SQLite), running on **port 3001** — exactly the port the farmer app and firmware already defaulted to before this session's detour.
+- `POST /v1/crop-health` already exists there (superseding the one added to `apps/dashboard/backend/main.py` this session, now deleted) — and it expects **multipart form-data** (an `image` file field), not raw JPEG bytes.
+- A full **`/v1/irrigation/requests` → `/approve` / `/decline`** flow already exists — more complete than the `/v1/actuator-command`-only shortcut this session wired up, and it's what the app's *original* code was already written for.
+- `ml/vision/requirements-inference.txt` already exists on `dev` — the team independently wrote almost the same lightweight inference-only requirements file created this session (`apps/dashboard/requirements-vision.txt`, now deleted as redundant).
+
+**Corrections made after merging `dev` into this branch:**
+
+| File | Change |
+|---|---|
+| [app_constants.dart](../apps/farmer-app/lib/core/constants/app_constants.dart) | `defaultEdgeApiUrl` → back to port **3001** |
+| [settings_screen.dart](../apps/farmer-app/lib/features/settings/settings_screen.dart) | Hint text → port 3001 |
+| [http_farm_state_repository.dart](../apps/farmer-app/lib/data/repositories/http_farm_state_repository.dart) | `submitImage()` rewritten to send **multipart** (`http.MultipartRequest`) instead of raw bytes — required by the real endpoint's `UploadFile` parameter. `approveIrrigation()` rewritten to use the real **create → approve/decline** flow instead of the `/v1/actuator-command` shortcut. |
+| `field_node.ino` | `EDGE_API_URL` → back to port **3001** |
+| `apps/dashboard/backend/main.py`, `apps/dashboard/requirements-vision.txt` | Deleted — superseded by `dev`'s versions in `services/edge-api/`. |
+
+**Running the Pi's backend now uses the new path** (this hasn't been re-run on the actual Pi yet — was set up mid-session against the now-deleted `apps/dashboard/backend`):
+```bash
+cd ~/citadel
+git pull origin dev   # or wherever the Pi's clone tracks after this merge lands
+cd services/edge-api
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port 3001 --reload
+```
+Then re-verify the dashboard at `http://192.168.1.31:3001` (note: `services/edge-api` serves its own static UI at `/`, migrated from `apps/dashboard/static/index.html`).
+
+---
+
+## 9. Open items for later sessions
+
+- [ ] **Re-run the Pi backend setup** against `services/edge-api` (port 3001) — the working setup from Section 3.7 targeted the now-deleted `apps/dashboard/backend`, needs to be redone once the Pi pulls this merge
 - [ ] Buy + wire capacitive soil moisture sensor → GPIO34 (also needed for the "Irrigate now" advisory to reflect real conditions instead of the floating-pin 100% artifact)
 - [ ] Decide on rain gauge substitution (analog raindrop board vs. hardcoded 0 for demo)
-- [ ] Backend consolidation: coordinate with the team on the port-3001 migration in `docs/backend-integration.md`, then update both the firmware's `EDGE_API_URL` **and** the app's `defaultEdgeApiUrl` to match once it's done
-- [ ] Run `flutter analyze` / `flutter test` on the farmer-app changes, then do one real on-phone test of the full flow (live readings, photo scan, irrigation approve, Settings → Test Connection)
-- [ ] Try installing `apps/dashboard/requirements-vision.txt` on the actual Pi 3B+ and see whether it installs and runs at an acceptable speed — have a laptop-hosted fallback ready if not
+- [ ] Run `flutter analyze` / `flutter test` on the farmer-app changes, then do one real on-phone test of the full flow (live readings, photo scan via multipart upload, irrigation request → approve/decline, Settings → Test Connection)
+- [ ] Try installing `ml/vision/requirements-inference.txt` on the actual Pi 3B+ and see whether it installs and runs at an acceptable speed — have a laptop-hosted fallback ready if not
 - [ ] If pump is reintroduced: identify relay NO terminal via boot-test, wire load side
 - [ ] Calibrate soil moisture (`SOIL_DRY_VALUE`/`SOIL_WET_VALUE`) and HC-SR04 (`TANK_EMPTY_CM`/`TANK_FULL_CM`) constants once the tank/soil setup is final
 - [ ] For field/demo-day deployment: consider configuring the Pi as its own Wi-Fi hotspot instead of depending on a specific network (relevant if moving locations, e.g. college) — the ESP32 would connect directly to the Pi with no external router/infrastructure dependency at all

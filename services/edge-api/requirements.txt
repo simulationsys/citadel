@@ -1,0 +1,8 @@
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
+pydantic>=2.6,<3
+python-multipart>=0.0.9    # /v1/crop-health, /v1/pest/analyze
+httpx>=0.27                # fastapi.testclient (and the Phase 4 cloud push client)
+
+# then, from this directory:
+#   .venv/Scripts/pip install -e ../../ml/pest-risk

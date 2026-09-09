@@ -11,7 +11,7 @@
 // ── Wi-Fi + edge API (fill in once you're ready to connect over the network) ──
 const char* WIFI_SSID    = "Excitel 4G";
 const char* WIFI_PASSWORD = "11223344";
-const char* EDGE_API_URL  = "http://192.168.1.31:3000/v1/readings"; // Python dashboard backend — has the real DB + UI (port 3001 is the older Node service, not wired to the dashboard yet)
+const char* EDGE_API_URL  = "http://192.168.1.31:3001/v1/readings"; // services/edge-api — the consolidated Python backend (port 3001), now the only backend in the repo
 const char* DEVICE_ID     = "field-node-01";
 const char* ZONE_ID       = "zone-a";
 const bool  WIFI_ENABLED  = true; // flip to true once WIFI_SSID/PASSWORD/EDGE_API_URL are set

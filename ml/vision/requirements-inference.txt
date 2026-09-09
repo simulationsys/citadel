@@ -1,0 +1,10 @@
+# Minimal runtime deps for inference.py only.
+# Do NOT install the full requirements.txt on the edge — it pulls in training
+# tools (sklearn, albumentations, tqdm) that are not needed at inference time.
+#
+# tensorflow>=2.19 has cp313 wheels; the original >=2.16,<2.18 range pre-dates cp313.
+# opencv-python-headless skips the GUI libs that are unavailable on headless servers.
+tensorflow>=2.19,<3
+opencv-python-headless>=4.9,<5
+numpy>=1.26,<3
+
