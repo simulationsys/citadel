@@ -2,6 +2,19 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Citadel uses the camera to photograph crop leaves for local crop-health analysis.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Citadel can analyze a crop image selected from your photo library.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Citadel uses the microphone only when you choose voice input.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Citadel connects to the farm edge computer on your local Wi-Fi network.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

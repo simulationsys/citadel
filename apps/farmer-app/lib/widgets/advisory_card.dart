@@ -91,6 +91,10 @@ class AdvisoryCard extends StatelessWidget {
     switch (advisory.type) {
       case 'irrigation':
         return Icons.water_drop;
+      // The engine emits `disease_risk`; `disease` is the legacy short form
+      // this switch used to expect, which sent every disease advisory to the
+      // default icon.
+      case 'disease_risk':
       case 'disease':
         return Icons.local_florist;
       case 'pest':

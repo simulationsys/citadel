@@ -8,6 +8,7 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../../core/config/app_settings_provider.dart';
 import '../../core/config/app_strings.dart';
 import '../../core/config/edge_config.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/reading.dart';
 import '../../data/repositories/farm_state_repository.dart';
@@ -35,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
         context.read<FarmStateProvider>().refreshFarmState();
       }
     });
-    _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _pollTimer = Timer.periodic(AppConstants.pollInterval, (_) {
       if (mounted) context.read<FarmStateProvider>().refreshFarmState();
     });
   }
@@ -177,7 +178,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showSensorDetailDialog(BuildContext context, String title, String value, String status) {
+  void _showSensorDetailDialog(BuildContext context, String title, String value,
+      String status, {Reading? reading}) {
+    final sampledAt = reading?.receivedAt ?? reading?.capturedAt;
+    final transmitted = sampledAt == null ? 'Not reported' : sampledAt.toLocal().toString();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -191,9 +195,9 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
             Text('Status: $status', style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
-            const Text('Node ID: Node #04 (Plot A)'),
-            const Text('Battery: 98% (Solar Powered)'),
-            const Text('Last Transmitted: 1 min ago'),
+            Text('Device: ${reading?.deviceId ?? 'Not connected'}'),
+            Text('Zone: ${reading?.zoneId ?? 'Not reported'}'),
+            Text('Last received: $transmitted'),
           ],
         ),
         actions: [
@@ -276,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        AppStrings.translate('Online • Synced', settings.language),
+                        AppStrings.translate('Local edge monitoring', settings.language),
                         style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -333,8 +337,16 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
               _buildSectionTitle(
                 AppStrings.translate('Real-time Sensors', settings.language),
-                actionText: 'Field A Live',
-                onActionTap: () => _showSensorDetailDialog(context, 'Field A Overview', '4 Active Nodes', 'All Operational'),
+                actionText: reading == null
+                    ? 'Waiting for node'
+                    : '${reading.zoneId} • ${reading.reportedMetricCount}/5 reporting',
+                onActionTap: () => _showSensorDetailDialog(
+                  context,
+                  'Field Node',
+                  reading == null ? '--' : '${reading.reportedMetricCount}/5 metrics',
+                  provider.freshness.name,
+                  reading: reading,
+                ),
               ),
               const SizedBox(height: 12),
               _buildSensorsGrid(reading),
@@ -357,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildGreetingSection(Reading? reading, AppSettingsProvider settings) {
-    final temp = reading != null ? '${reading.temperatureC.toStringAsFixed(0)}°C' : '34°C';
+    final temp = '${Reading.display(reading?.temperatureC)}°C';
     final greeting = '${AppStrings.translate('Good Morning', settings.language)},\n${settings.userName}';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -640,11 +652,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildSensorsGrid(Reading? reading) {
     final lang = context.read<AppSettingsProvider>().language;
-    final moisture = reading != null ? '${reading.soilMoisturePct.toStringAsFixed(0)}%' : '64%';
-    final temp = reading != null ? '${reading.temperatureC.toStringAsFixed(0)}°C' : '31°C';
-    final humidity = reading != null ? '${reading.humidityPct.toStringAsFixed(0)}%' : '58%';
+    final moisture = '${Reading.display(reading?.soilMoisturePct)}%';
+    final temp = '${Reading.display(reading?.temperatureC)}°C';
+    final humidity = '${Reading.display(reading?.humidityPct)}%';
+    final rainfall = '${Reading.display(reading?.rainfallMm, decimals: 1)} mm';
+    final waterLevel = '${Reading.display(reading?.waterLevelPct)}%';
 
-    final moistureOk = reading == null || reading.soilMoisturePct >= 40;
+    ({String text, Color color, Color background}) status(
+      double? value, String normal, bool Function(double) isWarning, String warning) {
+      if (value == null) {
+        return (text: 'Not reporting', color: AppColors.textSecondary,
+          background: Colors.grey[200]!);
+      }
+      if (isWarning(value)) {
+        return (text: warning, color: AppColors.severityCritical,
+          background: AppColors.severityCriticalBg);
+      }
+      return (text: normal, color: AppColors.primaryGreen,
+        background: AppColors.cardGreenBg);
+    }
+
+    final moistureStatus = status(reading?.soilMoisturePct, 'Sensor live',
+        (value) => value < 30, 'Low moisture');
+    final temperatureStatus = status(reading?.temperatureC, 'Sensor live',
+        (value) => value >= 38, 'High heat');
+    final humidityStatus = status(reading?.humidityPct, 'Sensor live',
+        (value) => value >= 85, 'High humidity');
+    final rainfallStatus = status(reading?.rainfallMm, 'No rain detected',
+        (value) => value > 0, 'Rain detected');
+    final waterStatus = status(reading?.waterLevelPct, 'Sensor live',
+        (value) => value >= 75, 'High water');
 
     return GridView.count(
       shrinkWrap: true,
@@ -657,47 +694,65 @@ class _HomeScreenState extends State<HomeScreen> {
         _buildSensorCard(
           title: AppStrings.translate('Moisture', lang),
           value: moisture,
-          statusText: AppStrings.translate(moistureOk ? 'Root Optimal' : 'Needs Water', lang),
-          statusColor: moistureOk ? AppColors.primaryGreen : AppColors.severityCritical,
-          statusBgColor: moistureOk ? AppColors.cardGreenBg : AppColors.severityCriticalBg,
+          statusText: AppStrings.translate(moistureStatus.text, lang),
+          statusColor: moistureStatus.color,
+          statusBgColor: moistureStatus.background,
           iconData: Icons.water_drop,
           iconColor: Colors.blue[300]!,
           iconBg: Colors.blue[50]!,
-          onTap: () => _showSensorDetailDialog(context, AppStrings.translate('Soil Moisture', lang), moisture, AppStrings.translate(moistureOk ? 'Optimal' : 'Deficit', lang)),
+          onTap: () => _showSensorDetailDialog(context,
+              AppStrings.translate('Soil Moisture', lang), moisture,
+              AppStrings.translate(moistureStatus.text, lang), reading: reading),
         ),
         _buildSensorCard(
           title: AppStrings.translate('Temp', lang),
           value: temp,
-          statusText: AppStrings.translate('Clear Skies', lang),
-          statusColor: AppColors.textSecondary,
-          statusBgColor: Colors.grey[200]!,
+          statusText: AppStrings.translate(temperatureStatus.text, lang),
+          statusColor: temperatureStatus.color,
+          statusBgColor: temperatureStatus.background,
           iconData: Icons.thermostat,
           iconColor: Colors.orange[700]!,
           iconBg: Colors.orange[50]!,
-          onTap: () => _showSensorDetailDialog(context, AppStrings.translate('Air Temperature', lang), temp, AppStrings.translate('Normal', lang)),
+          onTap: () => _showSensorDetailDialog(context,
+              AppStrings.translate('Air Temperature', lang), temp,
+              AppStrings.translate(temperatureStatus.text, lang), reading: reading),
         ),
         _buildSensorCard(
           title: AppStrings.translate('Humidity', lang),
           value: humidity,
-          statusText: AppStrings.translate('Good Spray', lang),
-          statusColor: Colors.white,
-          statusBgColor: const Color(0xFF5EE085),
+          statusText: AppStrings.translate(humidityStatus.text, lang),
+          statusColor: humidityStatus.color,
+          statusBgColor: humidityStatus.background,
           iconData: Icons.air,
           iconColor: AppColors.primaryGreen,
           iconBg: AppColors.cardGreenBg,
-          onTap: () => _showSensorDetailDialog(context, AppStrings.translate('Air Humidity', lang), humidity, AppStrings.translate('Ideal Spray Conditions', lang)),
+          onTap: () => _showSensorDetailDialog(context,
+              AppStrings.translate('Air Humidity', lang), humidity,
+              AppStrings.translate(humidityStatus.text, lang), reading: reading),
         ),
         _buildSensorCard(
-          title: AppStrings.translate('Irrigation', lang),
-          value: AppStrings.translate('6:00 PM', lang),
-          statusText: AppStrings.translate('45m Cycle', lang),
-          statusColor: AppColors.textSecondary,
-          statusBgColor: const Color(0xFFE8F0FE),
+          title: AppStrings.translate('Rainfall', lang),
+          value: rainfall,
+          statusText: AppStrings.translate(rainfallStatus.text, lang),
+          statusColor: rainfallStatus.color,
+          statusBgColor: rainfallStatus.background,
+          iconData: Icons.grain,
+          iconColor: Colors.blueGrey,
+          iconBg: Colors.blueGrey[50]!,
+          onTap: () => _showSensorDetailDialog(context, 'Rainfall', rainfall,
+              rainfallStatus.text, reading: reading),
+        ),
+        _buildSensorCard(
+          title: AppStrings.translate('Water Level', lang),
+          value: waterLevel,
+          statusText: AppStrings.translate(waterStatus.text, lang),
+          statusColor: waterStatus.color,
+          statusBgColor: waterStatus.background,
           iconData: Icons.water,
-          iconColor: AppColors.primaryGreen,
-          iconBg: AppColors.cardGreenBg,
-          statusIcon: Icons.history,
-          onTap: () => Navigator.pushNamed(context, '/advisory-detail'),
+          iconColor: Colors.blue[700]!,
+          iconBg: Colors.blue[50]!,
+          onTap: () => _showSensorDetailDialog(context, 'Water Level', waterLevel,
+              waterStatus.text, reading: reading),
         ),
       ],
     );

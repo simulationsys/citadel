@@ -3,11 +3,13 @@ import 'dart:io';
 import '../models/advisory.dart';
 import '../models/crop_health_result.dart';
 import '../models/farm_state.dart';
+import '../models/irrigation_request.dart';
 import '../models/reading.dart';
 import 'farm_state_repository.dart';
 
-/// Mock implementation that returns realistic hardcoded data.
-/// Simulates network delay so the UI loading states can be tested.
+/// Hardcoded demo data. **Only ever reachable when demo mode is explicitly
+/// selected** — never as a silent fallback for an unreachable edge node. See
+/// [HybridFarmStateRepository] for why that fallback was removed.
 class MockFarmStateRepository implements FarmStateRepository {
   @override
   Future<FarmState> getFarmState() async {
@@ -15,6 +17,7 @@ class MockFarmStateRepository implements FarmStateRepository {
     await Future.delayed(const Duration(milliseconds: 800));
 
     return FarmState(
+      freshness: DataFreshness.live,
       reading: Reading(
         deviceId: 'field-node-01',
         zoneId: 'zone-a',
@@ -61,10 +64,23 @@ class MockFarmStateRepository implements FarmStateRepository {
   }
 
   @override
-  Future<void> approveIrrigation(String action,
-      {required bool approved}) async {
+  Future<IrrigationOutcome> decideIrrigation({
+    required bool approved,
+    String requestedBy = 'farmer-app',
+    int? maxRuntimeSec,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    // In the mock, this is a no-op. The real implementation will POST to the
-    // edge API's actuation endpoint.
+    // Demo only. No relay command is produced, because no backend recorded an
+    // approval — a mock must not imply the pump was commanded.
+    final request = IrrigationRequest(
+      id: 'demo-request',
+      status: approved ? 'approved' : 'declined',
+      approvedBy: 'farmer',
+      maxRuntimeSec: maxRuntimeSec,
+    );
+    return IrrigationOutcome(
+      stage: approved ? IrrigationStage.approved : IrrigationStage.declined,
+      request: request,
+    );
   }
 }

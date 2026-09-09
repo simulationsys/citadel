@@ -19,6 +19,10 @@ void main() async {
       providers: [
         ChangeNotifierProvider.value(value: appSettings),
         ChangeNotifierProvider.value(value: edge),
+        // Live edge API only. There is deliberately no silent mock fallback:
+        // an unreachable node must look unreachable, not like a healthy farm.
+        // Offline is handled by the repository's own cache, which returns state
+        // marked `fromCache` so the UI can label it stale.
         ChangeNotifierProxyProvider<EdgeConfig, FarmStateProvider>(
           create: (_) => FarmStateProvider(
             HybridFarmStateRepository(

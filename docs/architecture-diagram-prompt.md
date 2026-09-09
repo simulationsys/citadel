@@ -10,7 +10,7 @@ Create a clean, presentation-grade system architecture diagram for **Citadel**, 
 
 - DHT11 temperature + humidity → GPIO4 (live)
 - HC-SR04 ultrasonic water level → TRIG GPIO32 / ECHO GPIO33 via a 1 kΩ + 2 kΩ voltage divider (5 V → 3.3 V) (live)
-- Relay module for the irrigation pump → GPIO26, held LOW on boot = pump OFF (control side live, pump load side NOT wired — draw dashed)
+- Relay module for the irrigation pump → GPIO26, OFF at boot, polarity configurable (control side live, pump load side NOT wired — draw dashed)
 - Capacitive soil-moisture sensor → GPIO34 (NOT purchased — draw dashed/greyed)
 - Tipping-bucket rain gauge → GPIO15 reserved (NOT available — draw dashed/greyed)
 - Status LED → GPIO2
@@ -18,17 +18,17 @@ Create a clean, presentation-grade system architecture diagram for **Citadel**, 
 **Lane 2 — Transport.** Two arrows out of the ESP32, every 10 seconds:
 
 - Solid: Wi-Fi → HTTP POST JSON → the edge API
-- Dashed: USB Serial @115200 baud, labelled "always-on fallback, works with no network"
+- Dashed: USB Serial @115200 baud, labelled "always printed, works with no network"
+- A RETURN arrow back up from the edge API to the ESP32, labelled "relay command rides the POST response" — this is the downlink, draw it prominently
 
-Show the JSON payload as a small note box: `deviceId, zoneId, soilMoisturePct, temperatureC, humidityPct, rainfallMm, waterLevelPct, sensorStatus{dht, ultrasonic}`.
+Show the JSON payload as a small note box: `eventId, deviceId, zoneId, temperatureC, humidityPct, waterLevelPct, relayReported`. Note that unwired/failed sensors are OMITTED, not defaulted.
 
 **Lane 3 — Edge compute (blue), all on a Raspberry Pi 3B+ running Raspberry Pi OS Lite 64-bit at LAN 192.168.1.31.** Draw a box around the Pi containing:
 
-- **Python Edge/Dashboard API — FastAPI, port 3000 (THE LIVE PATH, highlight it).** Endpoints: `POST /v1/readings`, `GET /v1/farm-state`, `GET /v1/history`, `POST /v1/crop-health`, `POST /v1/vision-results`, `POST /v1/actuator-command`, `GET /health`. Also serves the dashboard UI at `/`.
-- **SQLite `farm.db`** attached to it, with tables `readings`, `vision_results`, `actuator_logs`, `actuator_state`.
+- **Edge API — FastAPI, port 3001 (the only backend, highlight it).** Endpoints: `POST /v1/readings`, `GET /v1/farm-state`, `GET /v1/history`, `POST /v1/crop-health` (multipart), `POST /v1/irrigation/requests` + approve/decline, `POST /v1/actuator-command`, `GET /health`. Also serves the dashboard UI at `/`.
+- **SQLite `farm.db`** attached to it, with tables `readings`, `observations`, `irrigation_requests`, `actuator_state`, `actuator_logs`.
 - **Advisory engine** module inside the Python API.
-- **Node Edge API — port 3001**, in-memory FarmStore, zone-aware, irrigation request/approve workflow. Mark it "parallel implementation, to be consolidated" — draw with a dashed border.
-- **Pest & Risk Intelligence — FastAPI, port 8001.** Rules engine for water stress, heat stress, disease-inspection prompts, flood risk, pest activity, against crop profiles. Arrow from the Node API to it labelled "1.2 s timeout, falls back to local rules".
+- **Pest & Risk rules (`citadel_pest_risk`), imported in-process; also a standalone FastAPI on port 8001.** Rules engine for water stress, heat stress, disease-inspection prompts, flood risk, pest activity, against crop profiles.
 
 **Lane 4 — ML (amber).**
 
@@ -37,13 +37,13 @@ Show the JSON payload as a small note box: `deviceId, zoneId, soilMoisturePct, t
 
 **Lane 5 — Clients (grey).**
 
-- **Flutter farmer app (Android + iOS).** Show its three-tier fallback chain as a stack: live HTTP → SharedPreferences cache → mock data, labelled "UI never goes blank". Polls `/v1/farm-state` every 30 s. Freshness banner: fresh < 2 min, stale < 15 min, critical beyond. Camera → JPEG bytes → `POST /v1/crop-health`.
+- **Flutter farmer app (Android + iOS).** Polls `/v1/farm-state` every 30 s and uses the server's `freshness` field. Offline: farm state falls back to a local cache **labelled stale**; crop scans and irrigation decisions do NOT fall back, they show an error. Camera → multipart `image` → `POST /v1/crop-health`. Show the irrigation state machine as a chain: recommended → creating → pending → approved/declined → command available → hardware acknowledged.
 - **Web dashboard**, static HTML/JS served from the Python API.
 
 **Also draw, off to the side:**
 
-- A dashed box for **Cloud API (port 3002) — placeholder, future multi-farm sync**, with a dashed arrow from the Pi labelled "delayed batch sync (not built)".
-- A callout box titled **"Offline-first"** listing the degradation ladder: no cloud → fully functional · no Wi-Fi → Serial output + phone cache · pest service down → local fallback rules · vision model missing → inconclusive, not a crash · sensor NaN → safe defaults + error flag.
-- A callout titled **"Human in the loop"**: advisories never actuate the pump directly; the farmer approves, the command is audited, and the relay defaults OFF on every boot.
+- A dashed box for **Cloud API (port 3002)**, with a dashed arrow from the Pi labelled "push-only batch sync, OFF unless CITADEL_CLOUD_URL is set".
+- A callout box titled **"Offline-first"**: no cloud → fully functional · no Wi-Fi → Serial output, local dead-man still runs, phone cache marked stale · vision runtime missing → visible 503, never a fake "inconclusive" · sensor failed → field omitted, so no rule fires on it.
+- A callout titled **"Two independent shutoffs"**: advisories never actuate the pump; only a human approval does. Runtime is clamped 60–3600 s, and BOTH the Pi and the ESP32 enforce it separately, so either alone will turn the relay off.
 
 Draw a boundary around lanes 1–4 labelled **"Local Wi-Fi LAN — no internet dependency"**.

@@ -16,3 +16,5 @@ firmware/esp32-field-node/config.h
 *.egg-info/
 *.db.bak
 .pio/
+firmware/esp32-field-node/field_node/config.h
+.venv-audit/

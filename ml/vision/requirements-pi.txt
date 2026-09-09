@@ -1,0 +1,21 @@
+# Raspberry Pi inference runtime.
+#
+# Install this on the Pi, NOT requirements.txt. requirements.txt pulls the full
+# TensorFlow training stack (~600 MB installed, and hundreds of MB of RSS just
+# to import) which a Pi 3B+ with 1 GB of RAM cannot carry alongside the edge API.
+#
+# src/inference.py selects tflite_runtime first and only falls back to
+# tensorflow, so nothing here needs TensorFlow to be present.
+#
+#   python3 -m venv .venv
+#   .venv/bin/pip install -r ml/vision/requirements-pi.txt
+#
+# If pip cannot resolve tflite-runtime for this Python/architecture, check
+# `python3 -c "import platform; print(platform.machine())"` — it must be
+# aarch64 (Raspberry Pi OS 64-bit). Wheels for armv7l are not published for
+# recent versions.
+
+tflite-runtime>=2.14,<3
+# Headless: the GUI build pulls X11 libraries a headless Pi does not have.
+opencv-python-headless>=4.9,<5
+numpy>=1.26,<3

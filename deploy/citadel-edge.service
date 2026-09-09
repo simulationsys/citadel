@@ -1,0 +1,57 @@
+# Citadel edge API — systemd unit template.
+#
+# NOT INSTALLED. Copy to /etc/systemd/system/citadel-edge.service on the Pi.
+# See deploy/README.md for the install/enable/rollback commands.
+#
+# WorkingDirectory is the repo root because app/vision.py resolves ml/vision
+# from __file__ (so it is location-independent), but CITADEL_DB_PATH is set
+# explicitly below rather than relying on a relative default — under systemd the
+# working directory is not the one you started from, and a relative DB path is
+# how you end up with two farm.db files and a demo that shows the wrong one.
+
+[Unit]
+Description=Citadel offline-first edge API (readings, advisories, relay downlink)
+Documentation=https://github.com/simulationsys/citadel
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# Non-root. The service binds 3001, which needs no privilege.
+User=citadel
+Group=citadel
+
+WorkingDirectory=/home/citadel/citadel
+
+# Optional cloud settings live outside Git. `-` means "start anyway if absent",
+# which is what keeps the offline-first default working with no file present.
+EnvironmentFile=-/etc/citadel/edge.env
+
+ExecStart=/home/citadel/citadel/services/edge-api/.venv/bin/python -m uvicorn \
+    app.main:app \
+    --app-dir /home/citadel/citadel/services/edge-api \
+    --host 0.0.0.0 \
+    --port 3001
+
+Restart=on-failure
+RestartSec=5
+# Give up after 5 failures in 60s rather than hammering a genuinely broken
+# install; `systemctl reset-failed` clears it.
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# journalctl -u citadel-edge -f
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=citadel-edge
+
+# Modest hardening. The service only needs to read the repo and write farm.db.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/citadel/citadel/services/edge-api
+
+[Install]
+WantedBy=multi-user.target
