@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "scripts": {
     "dev:edge": "python -m uvicorn app.main:app --reload --port 3001 --app-dir services/edge-api",
-    "test:edge": "cd services/edge-api && .venv\\Scripts\\python -m unittest discover -s tests",
+    "test:edge": "cd services/edge-api && python -m unittest discover -s tests",
+    "test:cloud": "cd services/cloud-api && python -m unittest discover -s tests",
     "test:pest": "cd ml/pest-risk && python -m unittest discover -s tests",
-    "check": "npm run test:edge && npm run test:pest"
+    "check": "npm run test:edge && npm run test:cloud && npm run test:pest"
   }
 }
