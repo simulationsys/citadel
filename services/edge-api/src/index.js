@@ -56,6 +56,57 @@ async function advisoriesFor(reading, observations) {
   }
 }
 
+async function cropHealthFromRiskService(image) {
+  if (!riskServiceUrl) return null;
+  const result = await fetch(`${riskServiceUrl.replace(/\/$/, '')}/v1/crop-health/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(10_000),
+    body: JSON.stringify({ imageBase64: image.toString('base64') }),
+  });
+  const data = await result.json().catch(() => ({}));
+  if (!result.ok) {
+    const error = new Error(data.detail?.message ?? `AI service returned ${result.status}`);
+    error.status = result.status;
+    error.code = data.detail?.code ?? 'inference_error';
+    throw error;
+  }
+  if (!data.result || data.result.kind !== 'crop_health') throw new Error('AI service returned an invalid crop-health contract.');
+  return data.result;
+}
+
+async function pestDetectionFromRiskService(image) {
+  if (!riskServiceUrl) {
+    const error = new Error('Pest AI service is not configured.');
+    error.status = 503;
+    error.code = 'model_not_ready';
+    throw error;
+  }
+  const result = await fetch(`${riskServiceUrl.replace(/\/$/, '')}/v1/pest/analyze`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(10_000),
+    body: JSON.stringify({ imageBase64: image.toString('base64') }),
+  });
+  const data = await result.json().catch(() => ({}));
+  if (!result.ok) {
+    const error = new Error(data.detail?.message ?? `AI service returned ${result.status}`);
+    error.status = result.status;
+    error.code = data.detail?.code ?? 'inference_error';
+    throw error;
+  }
+  if (!Array.isArray(data.observations)) throw new Error('AI service returned an invalid pest contract.');
+  return data.observations;
+}
+
+async function cropHealthLocally(image, tmpPath) {
+  await fs.writeFile(tmpPath, image);
+  const mlDir = path.resolve(process.cwd(), '../../ml/vision');
+  const pythonExecutable = os.platform() === 'win32' ? '.venv\\Scripts\\python.exe' : '.venv/bin/python';
+  const { stdout } = await execFileAsync(pythonExecutable, ['-m', 'src.inference', tmpPath], { cwd: mlDir, timeout: 10_000, maxBuffer: 1_000_000 });
+  const result = JSON.parse(stdout.trim().split('\n').at(-1));
+  delete result._latency_ms;
+  return result;
+}
+
 async function farmState(zoneId) {
   const reading = store.latestReading(zoneId);
   if (!reading) return null;
@@ -82,16 +133,8 @@ http.createServer(async (request, response) => {
       const buf = await readBuffer(request);
       if (buf.length === 0) return send(response, 400, { error: 'invalid_request', message: 'No image provided.' });
       const tmpPath = path.join(os.tmpdir(), `crop-health-${crypto.randomUUID()}.jpg`);
-      await fs.writeFile(tmpPath, buf);
       try {
-        const mlDir = path.resolve(process.cwd(), '../../ml/vision');
-        const pythonExecutable = os.platform() === 'win32' ? '.venv\\Scripts\\python.exe' : '.venv/bin/python';
-        const { stdout } = await execFileAsync(pythonExecutable, ['-m', 'src.inference', tmpPath], { cwd: mlDir });
-        const lines = stdout.trim().split('\n');
-        const result = JSON.parse(lines[lines.length - 1]);
-        
-        // Sanitize internal fields from output contract
-        delete result._latency_ms;
+        const result = await cropHealthFromRiskService(buf) ?? await cropHealthLocally(buf, tmpPath);
 
         // Save diseases and inconclusive results as observations
         if (result.label !== 'invalid_image' && result.label !== 'healthy') {
@@ -101,12 +144,27 @@ http.createServer(async (request, response) => {
         }
         return send(response, 200, { result });
       } catch (err) {
-        if (err.code === 1) {
+        if (err.status === 422) return send(response, 422, { error: err.code, message: err.message });
+        if (err.status === 503 || err.code === 1 || err.code === 'ENOENT') {
           return send(response, 503, { error: 'model_unavailable', message: 'Model artifact not found or failed to load.' });
         }
-        return send(response, 500, { error: 'inference_error', details: err.message });
+        return send(response, 502, { error: 'inference_error', message: err.message });
       } finally {
         await fs.unlink(tmpPath).catch(() => {});
+      }
+    }
+    if (request.method === 'POST' && url.pathname === '/v1/pest-detection') {
+      const buf = await readBuffer(request);
+      if (buf.length === 0) return send(response, 400, { error: 'invalid_request', message: 'No image provided.' });
+      try {
+        const detected = await pestDetectionFromRiskService(buf);
+        const observations = detected.map((item) => store.addObservation({ kind: 'pest', zoneId, ...item }));
+        const state = await farmState(zoneId);
+        return send(response, 200, { observations, state });
+      } catch (err) {
+        if (err.status === 422) return send(response, 422, { error: err.code, message: err.message });
+        if (err.status === 503) return send(response, 503, { error: 'model_not_ready', message: err.message });
+        return send(response, 502, { error: 'inference_error', message: err.message });
       }
     }
     return send(response, 404, { error: 'Not found.' });
