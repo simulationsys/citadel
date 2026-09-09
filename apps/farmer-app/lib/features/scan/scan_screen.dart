@@ -379,7 +379,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    _isSingleLeafMode ? 'AI Scanner Ready â€¢ Good Lighting' : 'Field Spot Mode Active',
+                    _isSingleLeafMode ? 'AI Scanner Ready • Good Lighting' : 'Field Spot Mode Active',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,

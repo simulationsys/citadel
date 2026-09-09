@@ -60,11 +60,11 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
-            Text('â€¢ Today: 34Â°C, Clear Skies, Humid'),
-            Text('â€¢ Tomorrow: 33Â°C, Partly Cloudy'),
-            Text('â€¢ Day 3: 31Â°C, Moderate Rain Expected (15mm)'),
-            Text('â€¢ Day 4: 29Â°C, Heavy Rain Expected (25mm)'),
-            Text('â€¢ Day 5: 32Â°C, Sunny'),
+            Text('• Today: 34°C, Clear Skies, Humid'),
+            Text('• Tomorrow: 33°C, Partly Cloudy'),
+            Text('• Day 3: 31°C, Moderate Rain Expected (15mm)'),
+            Text('• Day 4: 29°C, Heavy Rain Expected (25mm)'),
+            Text('• Day 5: 32°C, Sunny'),
           ],
         ),
         actions: [
@@ -119,11 +119,11 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
-            Text('â€¢ Total Area: 4.5 hectares'),
-            Text('â€¢ Crop Stage: Day 78 (Boll Opening)'),
-            Text('â€¢ Health Score: 96% Healthy'),
-            Text('â€¢ Estimated Harvest: 22 days remaining'),
-            Text('â€¢ Expected Yield: 3.2 Tonnes/ha'),
+            Text('• Total Area: 4.5 hectares'),
+            Text('• Crop Stage: Day 78 (Boll Opening)'),
+            Text('• Health Score: 96% Healthy'),
+            Text('• Estimated Harvest: 22 days remaining'),
+            Text('• Expected Yield: 3.2 Tonnes/ha'),
           ],
         ),
         actions: [
@@ -214,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 AppStrings.translate('Real-time Sensors', settings.language),
                 actionText: reading == null
                     ? 'Waiting for node'
-                    : '${reading.zoneId} â€¢ ${reading.reportedMetricCount}/5 reporting',
+                    : '${reading.zoneId} • ${reading.reportedMetricCount}/5 reporting',
                 onActionTap: () => _showSensorDetailDialog(
                   context,
                   'Field Node',
@@ -244,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildGreetingSection(Reading? reading, AppSettingsProvider settings) {
-    final temp = '${Reading.display(reading?.temperatureC)}Â°C';
+    final temp = '${Reading.display(reading?.temperatureC)}°C';
     final greeting = '${AppStrings.translate('Good Morning', settings.language)},\n${settings.userName}';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,10 +351,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ? 'never'
         : '${DateTime.now().difference(provider.lastFetchTime!).inMinutes}m ago';
     final label = freshness == DataFreshness.live
-        ? AppStrings.translate('Live â€¢ Synced just now', settings.language)
+        ? AppStrings.translate('Live • Synced just now', settings.language)
         : freshness == DataFreshness.stale
-            ? 'Stale â€¢ Synced $ago'
-            : 'Offline Ready â€¢ Synced $ago';
+            ? 'Stale • Synced $ago'
+            : 'Offline Ready • Synced $ago';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -394,7 +394,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 6),
-        Text('Edge: ${edge.normalizedBaseUrl} â€¢ ${edge.zoneId}',
+        Text('Edge: ${edge.normalizedBaseUrl} • ${edge.zoneId}',
             style: const TextStyle(fontSize: 11, color: AppColors.textTertiary)),
       ],
     );
@@ -407,11 +407,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (topAlert != null) {
       title = AppStrings.translate(topAlert.title as String, context.read<AppSettingsProvider>().language);
       message = AppStrings.translate(topAlert.message as String, context.read<AppSettingsProvider>().language);
-      tag = AppStrings.translate('${topAlert.severity.toString().toUpperCase()} â€¢ ${topAlert.type.toString().toUpperCase()} ALERT', context.read<AppSettingsProvider>().language);
+      tag = AppStrings.translate('${topAlert.severity.toString().toUpperCase()} • ${topAlert.type.toString().toUpperCase()} ALERT', context.read<AppSettingsProvider>().language);
     } else {
       title = AppStrings.translate('Whitefly Infestation Detected Nearby', context.read<AppSettingsProvider>().language);
-      message = AppStrings.translate('Active in North Cotton field â€” apply organic neem spray before 5:00 PM to secure boll formation.', context.read<AppSettingsProvider>().language);
-      tag = AppStrings.translate('HIGH SEVERITY â€¢ PEST ALERT', context.read<AppSettingsProvider>().language);
+      message = AppStrings.translate('Active in North Cotton field — apply organic neem spray before 5:00 PM to secure boll formation.', context.read<AppSettingsProvider>().language);
+      tag = AppStrings.translate('HIGH SEVERITY • PEST ALERT', context.read<AppSettingsProvider>().language);
     }
     return Container(
       padding: const EdgeInsets.all(16),
@@ -515,7 +515,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSensorsGrid(Reading? reading) {
     final lang = context.read<AppSettingsProvider>().language;
     final moisture = '${Reading.display(reading?.soilMoisturePct)}%';
-    final temp = '${Reading.display(reading?.temperatureC)}Â°C';
+    final temp = '${Reading.display(reading?.temperatureC)}°C';
     final humidity = '${Reading.display(reading?.humidityPct)}%';
     final rainfall = '${Reading.display(reading?.rainfallMm, decimals: 1)} mm';
     final waterLevel = '${Reading.display(reading?.waterLevelPct)}%';
@@ -767,7 +767,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(color: const Color(0xFF5EE085), borderRadius: BorderRadius.circular(12)),
-                          child: const Text('â€¢ 96% Healthy', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                          child: const Text('• 96% Healthy', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                       ],
                     ),
@@ -778,7 +778,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         SizedBox(width: 4),
                         Text('Day 78', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         SizedBox(width: 6),
-                        Text('â€¢', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('•', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         SizedBox(width: 6),
                         Expanded(
                           child: Text('Boll Opening', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen), overflow: TextOverflow.ellipsis),

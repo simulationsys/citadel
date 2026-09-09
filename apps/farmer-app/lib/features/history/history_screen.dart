@@ -35,9 +35,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: const [
             Text('Recommended Organic Treatment:', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('â€¢ Neem Oil (10,000 PPM): 5 ml per Liter water'),
-            Text('â€¢ Spray Schedule: Early morning or post 5:00 PM'),
-            Text('â€¢ Coverage: Underside of leaves in North Plot'),
+            Text('• Neem Oil (10,000 PPM): 5 ml per Liter water'),
+            Text('• Spray Schedule: Early morning or post 5:00 PM'),
+            Text('• Coverage: Underside of leaves in North Plot'),
             SizedBox(height: 12),
             Text('Status: 100L batch ready for field application.', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w600)),
           ],
@@ -76,10 +76,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: const [
             Text('Soil Moisture Telemetry (Last 24h):', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('â€¢ 06:15 PM Yesterday: 42% (Low Moisture Alert)'),
-            Text('â€¢ 06:30 PM Yesterday: Drip Irrigation Started (45m)'),
-            Text('â€¢ 07:15 PM Yesterday: Drip Cycle Completed'),
-            Text('â€¢ Current Level: 68% (Optimal Root Zone)'),
+            Text('• 06:15 PM Yesterday: 42% (Low Moisture Alert)'),
+            Text('• 06:30 PM Yesterday: Drip Irrigation Started (45m)'),
+            Text('• 07:15 PM Yesterday: Drip Cycle Completed'),
+            Text('• Current Level: 68% (Optimal Root Zone)'),
           ],
         ),
         actions: [
@@ -107,9 +107,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: const [
             Text('Rohtak Zone Radar Overview:', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('â€¢ Precipitation: 40mm expected in next 3 days'),
-            Text('â€¢ Wind: 14 km/h North-East'),
-            Text('â€¢ Recommendation: Hold off chemical spray to prevent wash-off'),
+            Text('• Precipitation: 40mm expected in next 3 days'),
+            Text('• Wind: 14 km/h North-East'),
+            Text('• Recommendation: Hold off chemical spray to prevent wash-off'),
           ],
         ),
         actions: [
@@ -137,9 +137,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: const [
             Text('Application Summary:', style: TextStyle(fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('â€¢ Applied: Neem-coated Urea (45 kg/ha)'),
-            Text('â€¢ Area Covered: 4.2 hectares'),
-            Text('â€¢ Satellite NDVI Response: +8% vigor increase'),
+            Text('• Applied: Neem-coated Urea (45 kg/ha)'),
+            Text('• Area Covered: 4.2 hectares'),
+            Text('• Satellite NDVI Response: +8% vigor increase'),
           ],
         ),
         actions: [
@@ -185,7 +185,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        AppStrings.translate('Online â€¢ Synced', context.read<AppSettingsProvider>().language),
+                        AppStrings.translate('Online • Synced', context.read<AppSettingsProvider>().language),
                         style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -622,7 +622,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            AppStrings.translate('Chemical spray postponed â€¢ Saved \$45', context.read<AppSettingsProvider>().language),
+                            AppStrings.translate('Chemical spray postponed • Saved \$45', context.read<AppSettingsProvider>().language),
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -710,7 +710,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            AppStrings.translate('Completed (Urea applied) â€¢ NDVI +8%', context.read<AppSettingsProvider>().language),
+                            AppStrings.translate('Completed (Urea applied) • NDVI +8%', context.read<AppSettingsProvider>().language),
                             style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                             overflow: TextOverflow.ellipsis,
                           ),

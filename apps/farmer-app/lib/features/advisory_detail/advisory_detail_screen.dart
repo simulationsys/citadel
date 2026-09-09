@@ -35,10 +35,10 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
-            Text('â€¢ Location: Field 1: Plot A Cotton'),
-            Text('â€¢ Sensor Depth: 15cm Root Zone'),
-            Text('â€¢ Signal Strength: Excellent (-62 dBm)'),
-            Text('â€¢ Valve Controller: Drip Valve #3 Ready'),
+            Text('• Location: Field 1: Plot A Cotton'),
+            Text('• Sensor Depth: 15cm Root Zone'),
+            Text('• Signal Strength: Excellent (-62 dBm)'),
+            Text('• Valve Controller: Drip Valve #3 Ready'),
           ],
         ),
         actions: [
@@ -50,7 +50,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
 
   /// Approve irrigation.
   ///
-  /// This used to be `setState(() => _isApproved = true)` and nothing else â€”
+  /// This used to be `setState(() => _isApproved = true)` and nothing else —
   /// the screen reported "Irrigation Approved" without ever contacting the
   /// edge node. The banner now flips only after the backend confirms the
   /// approval and hands back the standing relay command.
@@ -70,7 +70,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: AppColors.severityCritical,
         content: Text(provider.irrigationError ??
-            'Irrigation was NOT approved â€” the field node did not confirm.'),
+            'Irrigation was NOT approved — the field node did not confirm.'),
       ));
       return;
     }
@@ -153,7 +153,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                     const SizedBox(width: 4),
                     const Expanded(
                       child: Text(
-                        'Online â€¢ Synced',
+                        'Online • Synced',
                         style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -320,7 +320,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                     children: const [
                       Text('High Evaporation Forecast', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                       SizedBox(height: 2),
-                      Text('0% Rain expected in 48h â€¢ Soil dries rapidly', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      Text('0% Rain expected in 48h • Soil dries rapidly', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
@@ -584,7 +584,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                   children: [
                     const Text('Valve Hardware\nState', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     Text(
-                      _isApproved ? 'Armed â€¢ Ready for 05:30 PM' : 'Closed â€¢ Awaiting\nCommand',
+                      _isApproved ? 'Armed • Ready for 05:30 PM' : 'Closed • Awaiting\nCommand',
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 12,
