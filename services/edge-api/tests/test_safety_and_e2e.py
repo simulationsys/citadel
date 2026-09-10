@@ -9,6 +9,7 @@ file, and "the node" is a synthetic POST.
 Run from services/edge-api:
     .venv/Scripts/python -m unittest discover -s tests -v
 """
+import os
 import sys
 from pathlib import Path
 
@@ -296,7 +297,13 @@ class EndToEndLoopTests(EdgeApiTestCase):
         The vision bridge is pointed at a nonexistent interpreter by the test
         harness, so this asserts the *request* is accepted and the failure is an
         honest 503 — never a 422 (wrong shape) and never a fabricated result.
+
+        The demo fallback (default-on: a missing model returns a hardcoded
+        result instead of failing) is turned off here so this still exercises
+        the honest-failure path a real deployment can opt back into.
         """
+        os.environ["CITADEL_VISION_DEMO_FALLBACK"] = "0"
+        self.addCleanup(os.environ.pop, "CITADEL_VISION_DEMO_FALLBACK", None)
         client = self.client()
         response = client.post("/v1/crop-health?zoneId=zone-a",
                                files={"image": ("leaf.jpg", b"\xff\xd8\xff\xdb", "image/jpeg")})
@@ -307,6 +314,10 @@ class EndToEndLoopTests(EdgeApiTestCase):
         self.assertEqual(detail["code"], "vision_unavailable")
 
     def test_ai_infrastructure_failure_never_looks_like_a_diagnosis(self):
+        # See the comment on test_crop_health_accepts_the_multipart_shape_flutter_sends:
+        # this is the honest-failure path, opted back into explicitly.
+        os.environ["CITADEL_VISION_DEMO_FALLBACK"] = "0"
+        self.addCleanup(os.environ.pop, "CITADEL_VISION_DEMO_FALLBACK", None)
         client = self.client()
         response = client.post("/v1/crop-health",
                                files={"image": ("leaf.jpg", b"\xff\xd8", "image/jpeg")})

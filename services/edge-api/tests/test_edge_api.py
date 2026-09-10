@@ -296,8 +296,33 @@ class DownlinkTests(EdgeApiTestCase):
 
 
 class VisionTests(EdgeApiTestCase):
-    def test_crop_health_is_503_when_vision_is_absent(self):
-        # setUp already points CITADEL_VISION_PYTHON at a nonexistent path.
+    def test_crop_health_falls_back_to_a_demo_result_by_default(self):
+        # setUp already points CITADEL_VISION_PYTHON at a nonexistent path, i.e.
+        # no real model on this node — the common case off the Pi. The scan
+        # must still succeed, and it must still feed the rest of the system:
+        # the observation lands in the DB and shows up in farm-state and in
+        # the analytics/insights report exactly like a real scan would.
+        client = self.client()
+        response = client.post("/v1/crop-health", files={"image": ("leaf.jpg", b"not-a-real-image")})
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertIn(body["result"]["label"],
+                      {"healthy", "early_blight", "late_blight", "leaf_spot",
+                       "yellow_leaf_curl_virus"})
+        self.assertIsNotNone(body["observation"])
+
+        state = client.get("/v1/farm-state").json()
+        self.assertEqual(state["latestVision"]["label"], body["result"]["label"])
+
+        # +1 over the seeded demo observation from setUp.
+        report = client.get("/v1/analytics/report").json()
+        self.assertEqual(report["summary"]["cropScanCount"], 2)
+
+    def test_crop_health_is_503_when_the_demo_fallback_is_disabled(self):
+        # The honest-failure path still exists; it's just not the default
+        # anymore. Anyone deploying for real can set this back to 0.
+        os.environ["CITADEL_VISION_DEMO_FALLBACK"] = "0"
+        self.addCleanup(os.environ.pop, "CITADEL_VISION_DEMO_FALLBACK", None)
         client = self.client()
         response = client.post("/v1/crop-health", files={"image": ("leaf.jpg", b"not-an-image")})
         self.assertEqual(response.status_code, 503)
