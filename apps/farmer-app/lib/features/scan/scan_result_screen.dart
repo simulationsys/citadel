@@ -1,7 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../core/config/app_settings_provider.dart';
+import '../../core/config/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/models/crop_health_result.dart';
 import '../../widgets/profile_avatar_button.dart';
@@ -15,11 +18,12 @@ class ScanResultScreen extends StatelessWidget {
 
   const ScanResultScreen({super.key, this.imageFile, required this.result});
 
-  String get _title {
-    if (result.isRejectedImage) return 'Retake the photo';
-    if (result.isInconclusive) return 'Result inconclusive';
-    if (result.isHealthy) return 'Leaf appears healthy';
-    return 'Possible ${result.displayLabel}';
+  String _titleFor(BuildContext context) {
+    String t(String k) => AppStrings.translate(k, context.read<AppSettingsProvider>().language);
+    if (result.isRejectedImage) return t('Retake the photo');
+    if (result.isInconclusive) return t('Result inconclusive');
+    if (result.isHealthy) return t('Leaf appears healthy');
+    return '${t('Possible')} ${t(result.displayLabel)}';
   }
 
   Color get _resultColor {
@@ -28,24 +32,26 @@ class ScanResultScreen extends StatelessWidget {
     return AppColors.severityCritical;
   }
 
-  String get _nextStep {
+  String _nextStepFor(BuildContext context) {
+    String t(String k) => AppStrings.translate(k, context.read<AppSettingsProvider>().language);
     if (result.isRejectedImage) {
       return result.limitation ??
-          'Use a clear, well-lit close-up containing one tomato leaf.';
+          t('Use a clear, well-lit close-up containing one tomato leaf.');
     }
     if (result.isInconclusive) {
       return result.limitation ??
-          'Capture another clear close-up and inspect the plant directly.';
+          t('Capture another clear close-up and inspect the plant directly.');
     }
     if (result.isHealthy) {
-      return 'Continue regular monitoring. Scan again if visible symptoms develop.';
+      return t('Continue regular monitoring. Scan again if visible symptoms develop.');
     }
-    return 'Inspect nearby plants and consult a qualified agricultural advisor before applying treatment.';
+    return t('Inspect nearby plants and consult a qualified agricultural advisor before applying treatment.');
   }
 
   @override
   Widget build(BuildContext context) {
     final confidence = '${(result.confidence * 100).toStringAsFixed(1)}%';
+    String t(String k) => AppStrings.translate(k, context.read<AppSettingsProvider>().language);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -55,12 +61,12 @@ class ScanResultScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Row(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CitadelLogo(size: 34),
-            SizedBox(width: 8),
-            Text('Crop-health result', style: TextStyle(
+            const CitadelLogo(size: 34),
+            const SizedBox(width: 8),
+            Text(t('Crop-health result'), style: const TextStyle(
               color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
@@ -111,7 +117,7 @@ class ScanResultScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _title,
+                        _titleFor(context),
                         style: TextStyle(
                           color: _resultColor,
                           fontSize: 21,
@@ -122,13 +128,13 @@ class ScanResultScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 18),
-                _row('Crop model', result.crop),
-                _row('Model label', result.displayLabel),
-                _row('Confidence', confidence),
-                _row('Image quality', result.imageQuality),
-                if (result.runtime != null) _row('AI runtime', result.runtime!),
+                _row(t('Crop model'), t(result.crop)),
+                _row(t('Model label'), t(result.displayLabel)),
+                _row(t('Confidence'), confidence),
+                _row(t('Image quality'), t(result.imageQuality)),
+                if (result.runtime != null) _row(t('AI runtime'), result.runtime!),
                 if (result.latencyMs != null)
-                  _row('Inference time', '${result.latencyMs!.toStringAsFixed(0)} ms'),
+                  _row(t('Inference time'), '${result.latencyMs!.toStringAsFixed(0)} ms'),
               ],
             ),
           ),
@@ -142,25 +148,27 @@ class ScanResultScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.fact_check_outlined, color: AppColors.primaryGreen),
-                    SizedBox(width: 8),
-                    Text(
-                      'Recommended next step',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    const Icon(Icons.fact_check_outlined, color: AppColors.primaryGreen),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        t('Recommended next step'),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text(_nextStep, style: const TextStyle(height: 1.45)),
+                Text(_nextStepFor(context), style: const TextStyle(height: 1.45)),
               ],
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Citadel provides decision support, not a final diagnosis. Confirm visible disease with a qualified agricultural professional before treatment.',
-            style: TextStyle(
+          Text(
+            t('Citadel provides decision support, not a final diagnosis. Confirm visible disease with a qualified agricultural professional before treatment.'),
+            style: const TextStyle(
               color: AppColors.textSecondary,
               fontSize: 12,
               height: 1.4,
@@ -170,7 +178,7 @@ class ScanResultScreen extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.camera_alt),
-            label: const Text('Scan another tomato leaf'),
+            label: Text(t('Scan another tomato leaf')),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primaryGreen,
               padding: const EdgeInsets.symmetric(vertical: 15),
@@ -180,7 +188,7 @@ class ScanResultScreen extends StatelessWidget {
           TextButton.icon(
             onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
             icon: const Icon(Icons.home_outlined),
-            label: const Text('Back to farm overview'),
+            label: Text(t('Back to farm overview')),
           ),
         ],
       ),

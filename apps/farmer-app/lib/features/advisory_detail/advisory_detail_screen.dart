@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/config/app_settings_provider.dart';
+import '../../core/config/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/repositories/farm_state_repository.dart';
 import '../../widgets/app_bottom_nav.dart';
@@ -19,30 +21,33 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
   bool _isApproved = false;
   bool _isSubmitting = false;
 
+  String _t(String key) =>
+      AppStrings.translate(key, context.read<AppSettingsProvider>().language);
+
   void _showNodeDetails(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: const [
-            Icon(Icons.grid_view, color: AppColors.primaryGreen),
-            SizedBox(width: 8),
-            Text('Telemetry Node #04'),
+          children: [
+            const Icon(Icons.grid_view, color: AppColors.primaryGreen),
+            const SizedBox(width: 8),
+            Expanded(child: Text('${_t('Telemetry Node')} #04')),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('• Location: Field 1: Plot A Cotton'),
-            Text('• Sensor Depth: 15cm Root Zone'),
-            Text('• Signal Strength: Excellent (-62 dBm)'),
-            Text('• Valve Controller: Drip Valve #3 Ready'),
+          children: [
+            Text('• ${_t('Location')}: ${_t('Field 1: Plot A Cotton')}'),
+            Text('• ${_t('Sensor Depth: 15cm Root Zone')}'),
+            Text('• ${_t('Signal Strength: Excellent (-62 dBm)')}'),
+            Text('• ${_t('Valve Controller: Drip Valve #3 Ready')}'),
           ],
         ),
         actions: [
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: Text(_t('OK'))),
         ],
       ),
     );
@@ -70,14 +75,14 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         backgroundColor: AppColors.severityCritical,
         content: Text(provider.irrigationError ??
-            'Irrigation was NOT approved — the field node did not confirm.'),
+            _t('Irrigation was NOT approved — the field node did not confirm.')),
       ));
       return;
     }
 
     if (!approved) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Declined. The pump was not commanded.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(_t('Declined. The pump was not commanded.')),
       ));
       Navigator.pop(context);
       return;
@@ -89,28 +94,28 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: const [
-            Icon(Icons.check_circle, color: AppColors.primaryGreen),
-            SizedBox(width: 8),
-            Expanded(child: Text('Irrigation Approved')),
+          children: [
+            const Icon(Icons.check_circle, color: AppColors.primaryGreen),
+            const SizedBox(width: 8),
+            Expanded(child: Text(_t('Irrigation Approved'))),
           ],
         ),
         // Deliberately precise: the approval is recorded and a command is
         // waiting. The pump has not run until the node collects that command
         // and acknowledges it on its next reading.
         content: Text(command == null
-            ? 'Approval recorded by the field node.'
-            : 'Approval recorded. The field node will start '
-              '${command.actuatorId} for up to '
-              '${(command.maxRuntimeSec / 60).round()} minutes when it next '
-              'checks in, and will report back once the relay is on.'),
+            ? _t('Approval recorded by the field node.')
+            : '${_t('Approval recorded. The field node will start')} '
+              '${command.actuatorId} ${_t('for up to')} '
+              '${(command.maxRuntimeSec / 60).round()} '
+              '${_t('minutes when it next checks in, and will report back once the relay is on.')}'),
         actions: [
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               Navigator.pop(context);
             },
-            child: const Text('Return to Dashboard'),
+            child: Text(_t('Return to Dashboard')),
           ),
         ],
       ),
@@ -142,19 +147,19 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Citadel Farm',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                Text(
+                  _t('Citadel Farm'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Row(
                   children: [
                     Container(width: 6, height: 6, decoration: const BoxDecoration(color: AppColors.primaryGreen, shape: BoxShape.circle)),
                     const SizedBox(width: 4),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'Online • Synced',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                        _t('Online • Synced'),
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -183,10 +188,10 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                 children: [
                   Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFFC78446), shape: BoxShape.circle)),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'LIVE SOIL TELEMETRY',
-                      style: TextStyle(color: Color(0xFFC78446), fontSize: 10, fontWeight: FontWeight.bold),
+                      _t('LIVE SOIL TELEMETRY'),
+                      style: const TextStyle(color: Color(0xFFC78446), fontSize: 10, fontWeight: FontWeight.bold),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -200,26 +205,26 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(color: const Color(0xFFE8F0FE), borderRadius: BorderRadius.circular(12)),
-                child: const Text('Node #04', style: TextStyle(color: AppColors.textPrimary, fontSize: 10, fontWeight: FontWeight.bold)),
+                child: Text('${_t('Node')} #04', style: const TextStyle(color: AppColors.textPrimary, fontSize: 10, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Irrigation Advisory Detail',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+        Text(
+          _t('Irrigation Advisory Detail'),
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
         Row(
-          children: const [
-            Icon(Icons.location_on_outlined, color: AppColors.primaryGreen, size: 16),
-            SizedBox(width: 4),
+          children: [
+            const Icon(Icons.location_on_outlined, color: AppColors.primaryGreen, size: 16),
+            const SizedBox(width: 4),
             Expanded(
               child: Text(
-                'Field 1: Plot A Cotton',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                _t('Field 1: Plot A Cotton'),
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -250,9 +255,9 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text('Soil Moisture Profile', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-              Text('Deficit Detected', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC78446))),
+            children: [
+              Text(_t('Soil Moisture Profile'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              Text(_t('Deficit Detected'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC78446))),
             ],
           ),
           const SizedBox(height: 24),
@@ -270,9 +275,9 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                   ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text('42%', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                      Text('Current Moisture', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC78446))),
+                    children: [
+                      const Text('42%', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                      Text(_t('Current Moisture'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC78446))),
                     ],
                   ),
                 ],
@@ -286,17 +291,17 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('Threshold', style: TextStyle(color: Color(0xFFC78446), fontSize: 12, fontWeight: FontWeight.bold)),
-                  Text('< 50% Critical', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                children: [
+                  Text(_t('Threshold'), style: const TextStyle(color: Color(0xFFC78446), fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text('< 50% ${_t('Critical')}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                 ],
               ),
               Container(width: 1, height: 24, color: Colors.grey[300]),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
-                children: const [
-                  Text('Target', style: TextStyle(color: AppColors.primaryGreen, fontSize: 12, fontWeight: FontWeight.bold)),
-                  Text('65% (Optimal)', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                children: [
+                  Text(_t('Target'), style: const TextStyle(color: AppColors.primaryGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text('65% (${_t('Optimal')})', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                 ],
               ),
             ],
@@ -317,10 +322,10 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('High Evaporation Forecast', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                      SizedBox(height: 2),
-                      Text('0% Rain expected in 48h • Soil dries rapidly', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    children: [
+                      Text(_t('High Evaporation Forecast'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                      const SizedBox(height: 2),
+                      Text(_t('0% Rain expected in 48h • Soil dries rapidly'), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
@@ -344,16 +349,16 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(Icons.psychology_outlined, color: AppColors.primaryGreen, size: 20),
-              SizedBox(width: 8),
-              Text('Agronomic Reason', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            children: [
+              const Icon(Icons.psychology_outlined, color: AppColors.primaryGreen, size: 20),
+              const SizedBox(width: 8),
+              Expanded(child: Text(_t('Agronomic Reason'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary))),
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Moisture level is below the 55% root threshold during flowering stage. Watering today protects bloom retention.',
-            style: TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.4),
+          Text(
+            _t('Moisture level is below the 55% root threshold during flowering stage. Watering today protects bloom retention.'),
+            style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.4),
           ),
           const SizedBox(height: 20),
           
@@ -364,12 +369,12 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(color: const Color(0xFFF4F6FF), borderRadius: BorderRadius.circular(12)),
                   child: Column(
-                    children: const [
-                      Icon(Icons.timer_outlined, color: AppColors.primaryGreen, size: 16),
-                      SizedBox(height: 6),
-                      Text('Duration', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                      Text('45 mins', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                      Text('Drip line', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                    children: [
+                      const Icon(Icons.timer_outlined, color: AppColors.primaryGreen, size: 16),
+                      const SizedBox(height: 6),
+                      Text(_t('Duration'), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                      Text('45 ${_t('mins')}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                      Text(_t('Drip line'), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
@@ -380,12 +385,12 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(color: AppColors.cardGreenBg, borderRadius: BorderRadius.circular(12)),
                   child: Column(
-                    children: const [
-                      Icon(Icons.water_drop_outlined, color: AppColors.primaryGreen, size: 16),
-                      SizedBox(height: 6),
-                      Text('Volume', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                      Text('1,200 L', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
-                      Text('Calculated', style: TextStyle(fontSize: 10, color: AppColors.primaryGreen)),
+                    children: [
+                      const Icon(Icons.water_drop_outlined, color: AppColors.primaryGreen, size: 16),
+                      const SizedBox(height: 6),
+                      Text(_t('Volume'), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                      const Text('1,200 L', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
+                      Text(_t('Calculated'), style: const TextStyle(fontSize: 10, color: AppColors.primaryGreen)),
                     ],
                   ),
                 ),
@@ -396,12 +401,12 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(color: const Color(0xFFFDF7F1), borderRadius: BorderRadius.circular(12)),
                   child: Column(
-                    children: const [
-                      Icon(Icons.savings_outlined, color: Color(0xFFC78446), size: 16),
-                      SizedBox(height: 6),
-                      Text('Savings', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                      Text('30% Off', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC78446))),
-                      Text('Night rate', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                    children: [
+                      const Icon(Icons.savings_outlined, color: Color(0xFFC78446), size: 16),
+                      const SizedBox(height: 6),
+                      Text(_t('Savings'), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                      Text('30% ${_t('Off')}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFFC78446))),
+                      Text(_t('Night rate'), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
@@ -430,7 +435,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _isApproved ? 'Irrigation APPROVED' : 'Irrigation has NOT started',
+                        _isApproved ? _t('Irrigation APPROVED') : _t('Irrigation has NOT started'),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -440,8 +445,8 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                       const SizedBox(height: 2),
                       Text(
                         _isApproved
-                            ? 'Valves will automatically trigger at 05:30 PM.'
-                            : 'Awaiting manual confirmation before system can open valves.',
+                            ? _t('Valves will automatically trigger at 05:30 PM.')
+                            : _t('Awaiting manual confirmation before system can open valves.'),
                         style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3),
                       ),
                     ],
@@ -460,7 +465,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                       ? null
                       : () => _handleDecision(approved: false),
                   icon: const Icon(Icons.close),
-                  label: const Text('Decline'),
+                  label: Text(_t('Decline')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -481,10 +486,10 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                               strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.check_circle_outline),
                   label: Text(_isSubmitting
-                      ? 'Sending...'
+                      ? _t('Sending...')
                       : _isApproved
-                          ? 'Approved'
-                          : 'Approve'),
+                          ? _t('Approved')
+                          : _t('Approve')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryGreenDark,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -513,16 +518,16 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                children: const [
-                  Icon(Icons.account_tree_outlined, color: AppColors.textPrimary, size: 20),
-                  SizedBox(width: 8),
-                  Text('Execution\nSequence', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary, height: 1.1)),
+                children: [
+                  const Icon(Icons.account_tree_outlined, color: AppColors.textPrimary, size: 20),
+                  const SizedBox(width: 8),
+                  Text(_t('Execution\nSequence'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary, height: 1.1)),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(color: const Color(0xFFDDE4FB), borderRadius: BorderRadius.circular(16)),
-                child: const Text('SCHEDULE\nPREVIEW', textAlign: TextAlign.right, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSecondary, height: 1.1)),
+                child: Text(_t('SCHEDULE\nPREVIEW'), textAlign: TextAlign.right, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSecondary, height: 1.1)),
               ),
             ],
           ),
@@ -547,13 +552,13 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                         children: [
                           Row(
                             children: [
-                              const Text('Drip Valve #3', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                              Text('${_t('Drip Valve')} #3', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(4)),
                                 child: Text(
-                                  _isApproved ? 'Armed' : 'Standby',
+                                  _isApproved ? _t('Armed') : _t('Standby'),
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -564,7 +569,7 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                             ],
                           ),
                           const SizedBox(height: 2),
-                          const Text('Scheduled Start: 05:30 PM (Today)', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          Text('${_t('Scheduled Start')}: 05:30 PM (${_t('Today')})', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         ],
                       ),
                     ),
@@ -573,18 +578,18 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text('Active Duration', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                    Text('45 min Run', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  children: [
+                    Text(_t('Active Duration'), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    Text('45 ${_t('min Run')}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Valve Hardware\nState', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    Text(_t('Valve Hardware\nState'), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     Text(
-                      _isApproved ? 'Armed • Ready for 05:30 PM' : 'Closed • Awaiting\nCommand',
+                      _isApproved ? _t('Armed • Ready for 05:30 PM') : _t('Closed • Awaiting\nCommand'),
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 12,
@@ -607,8 +612,8 @@ class _AdvisoryDetailScreenState extends State<AdvisoryDetailScreen> {
               Expanded(
                 child: Text(
                   _isApproved
-                      ? 'Water flow is authorized. Valve opens at 05:30 PM.'
-                      : 'No water is flowing. Water starts strictly at 05:30 PM when authorized.',
+                      ? _t('Water flow is authorized. Valve opens at 05:30 PM.')
+                      : _t('No water is flowing. Water starts strictly at 05:30 PM when authorized.'),
                   style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                 ),
               ),

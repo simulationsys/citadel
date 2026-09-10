@@ -26,8 +26,10 @@ class _ScanScreenState extends State<ScanScreen> {
 
   void _toggleScanMode(bool singleLeaf) {
     if (!singleLeaf) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('The current AI model analyzes a close-up of one tomato leaf.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppStrings.translate(
+            'The current AI model analyzes a close-up of one tomato leaf.',
+            context.read<AppSettingsProvider>().language)),
       ));
       return;
     }
@@ -134,7 +136,7 @@ class _ScanScreenState extends State<ScanScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: AppColors.severityCritical,
-            content: Text('Camera or image access failed: $e'),
+            content: Text('${AppStrings.translate('Camera or image access failed', context.read<AppSettingsProvider>().language)}: $e'),
           ),
         );
       }
@@ -184,13 +186,14 @@ class _ScanScreenState extends State<ScanScreen> {
         icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
         onPressed: () => Navigator.pop(context),
       ),
-      title: const Row(
+      title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CitadelLogo(size: 34),
-          SizedBox(width: 8),
-          Text('Crop Scanner', style: TextStyle(
-            color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+          const CitadelLogo(size: 34),
+          const SizedBox(width: 8),
+          Text(AppStrings.translate('Crop Scanner', context.read<AppSettingsProvider>().language),
+              style: const TextStyle(
+                  color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
         ],
       ),
       centerTitle: true,

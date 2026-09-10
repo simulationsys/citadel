@@ -33,7 +33,7 @@ class ProfileScreen extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating photo: $e')),
+          SnackBar(content: Text('${AppStrings.translate('Error updating photo', context.read<AppSettingsProvider>().language)}: $e')),
         );
       }
     }
@@ -471,9 +471,9 @@ class ProfileScreen extends StatelessWidget {
             label: Text(AppStrings.translate('Connection & Settings', settings.language)),
           ),
           const SizedBox(height: 8),
-          const Center(
-            child: Text('Citadel Farmer App v0.1.0 • offline-first',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Center(
+            child: Text('${AppStrings.translate('Citadel Farmer App', settings.language)} v0.1.0 • ${AppStrings.translate('offline-first', settings.language)}',
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           ),
           const SizedBox(height: 48),
         ],

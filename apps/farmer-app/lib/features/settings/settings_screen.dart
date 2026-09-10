@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/config/app_language.dart';
 import '../../core/config/app_settings_provider.dart';
+import '../../core/config/app_strings.dart';
 import '../../core/config/edge_config.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
@@ -52,12 +53,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CitadelLogo(size: 36),
-            SizedBox(width: 8),
-            Text('Settings'),
+            const CitadelLogo(size: 36),
+            const SizedBox(width: 8),
+            Text(AppStrings.translate('Settings', context.read<AppSettingsProvider>().language)),
           ],
         ),
       ),
@@ -213,7 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await edge.setZoneId(_zoneController.text.isEmpty ? 'zone-a' : _zoneController.text);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved — ${edge.normalizedBaseUrl} • ${edge.zoneId}')),
+          SnackBar(content: Text('${AppStrings.translate('Saved', context.read<AppSettingsProvider>().language)} — ${edge.normalizedBaseUrl} • ${edge.zoneId}')),
         );
       }
     } finally {

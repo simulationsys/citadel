@@ -17,41 +17,44 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   String _selectedFilter = 'All';
 
+  String _t(String key) =>
+      AppStrings.translate(key, context.read<AppSettingsProvider>().language);
+
   void _showDosageDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: const [
-            Icon(Icons.bug_report, color: AppColors.severityCritical),
-            SizedBox(width: 8),
-            Text('Whitefly Dosage Plan'),
+          children: [
+            const Icon(Icons.bug_report, color: AppColors.severityCritical),
+            const SizedBox(width: 8),
+            Expanded(child: Text(_t('Whitefly Dosage Plan'))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('Recommended Organic Treatment:', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Text('• Neem Oil (10,000 PPM): 5 ml per Liter water'),
-            Text('• Spray Schedule: Early morning or post 5:00 PM'),
-            Text('• Coverage: Underside of leaves in North Plot'),
-            SizedBox(height: 12),
-            Text('Status: 100L batch ready for field application.', style: TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w600)),
+          children: [
+            Text(_t('Recommended Organic Treatment:'), style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('• ${_t('Neem Oil (10,000 PPM): 5 ml per Liter water')}'),
+            Text('• ${_t('Spray Schedule: Early morning or post 5:00 PM')}'),
+            Text('• ${_t('Coverage: Underside of leaves in North Plot')}'),
+            const SizedBox(height: 12),
+            Text(_t('Status: 100L batch ready for field application.'), style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w600)),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Dismiss')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(_t('Dismiss'))),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Dosage applied & logged to farm register!')),
+                SnackBar(content: Text(_t('Dosage applied & logged to farm register!'))),
               );
             },
-            child: const Text('Apply Dosage'),
+            child: Text(_t('Apply Dosage')),
           ),
         ],
       ),
@@ -64,26 +67,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: const [
-            Icon(Icons.water_drop, color: AppColors.primaryGreen),
-            SizedBox(width: 8),
-            Text('Plot A Sensor Log'),
+          children: [
+            const Icon(Icons.water_drop, color: AppColors.primaryGreen),
+            const SizedBox(width: 8),
+            Expanded(child: Text(_t('Plot A Sensor Log'))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('Soil Moisture Telemetry (Last 24h):', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Text('• 06:15 PM Yesterday: 42% (Low Moisture Alert)'),
-            Text('• 06:30 PM Yesterday: Drip Irrigation Started (45m)'),
-            Text('• 07:15 PM Yesterday: Drip Cycle Completed'),
-            Text('• Current Level: 68% (Optimal Root Zone)'),
+          children: [
+            Text(_t('Soil Moisture Telemetry (Last 24h):'), style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('• ${_t('06:15 PM Yesterday: 42% (Low Moisture Alert)')}'),
+            Text('• ${_t('06:30 PM Yesterday: Drip Irrigation Started (45m)')}'),
+            Text('• ${_t('07:15 PM Yesterday: Drip Cycle Completed')}'),
+            Text('• ${_t('Current Level: 68% (Optimal Root Zone)')}'),
           ],
         ),
         actions: [
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: Text(_t('OK'))),
         ],
       ),
     );
@@ -95,25 +98,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: const [
-            Icon(Icons.cloudy_snowing, color: AppColors.primaryGreen),
-            SizedBox(width: 8),
-            Text('Weather Radar'),
+          children: [
+            const Icon(Icons.cloudy_snowing, color: AppColors.primaryGreen),
+            const SizedBox(width: 8),
+            Expanded(child: Text(_t('Weather Radar'))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('Rohtak Zone Radar Overview:', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Text('• Precipitation: 40mm expected in next 3 days'),
-            Text('• Wind: 14 km/h North-East'),
-            Text('• Recommendation: Hold off chemical spray to prevent wash-off'),
+          children: [
+            Text(_t('Rohtak Zone Radar Overview:'), style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('• ${_t('Precipitation: 40mm expected in next 3 days')}'),
+            Text('• ${_t('Wind: 14 km/h North-East')}'),
+            Text('• ${_t('Recommendation: Hold off chemical spray to prevent wash-off')}'),
           ],
         ),
         actions: [
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: Text(_t('Close'))),
         ],
       ),
     );
@@ -125,25 +128,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: const [
-            Icon(Icons.eco, color: AppColors.primaryGreen),
-            SizedBox(width: 8),
-            Text('Nutrient Batch #N-204'),
+          children: [
+            const Icon(Icons.eco, color: AppColors.primaryGreen),
+            const SizedBox(width: 8),
+            Expanded(child: Text('${_t('Nutrient Batch')} #N-204')),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('Application Summary:', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            Text('• Applied: Neem-coated Urea (45 kg/ha)'),
-            Text('• Area Covered: 4.2 hectares'),
-            Text('• Satellite NDVI Response: +8% vigor increase'),
+          children: [
+            Text(_t('Application Summary:'), style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('• ${_t('Applied: Neem-coated Urea (45 kg/ha)')}'),
+            Text('• ${_t('Area Covered: 4.2 hectares')}'),
+            Text('• ${_t('Satellite NDVI Response: +8% vigor increase')}'),
           ],
         ),
         actions: [
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Done')),
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: Text(_t('Done'))),
         ],
       ),
     );
@@ -174,9 +177,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Citadel Farm',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                Text(
+                  _t('Citadel Farm'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Row(
@@ -233,7 +236,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               const SizedBox(width: 8),
               InkWell(
                 onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Log refreshed.')),
+                  SnackBar(content: Text(_t('Log refreshed.'))),
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(10),
@@ -322,7 +325,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           _buildNutrientAlertCard(context),
           const SizedBox(height: 32),
         ],
-        const Center(child: Text('All past advisories up to date', style: TextStyle(color: AppColors.textSecondary, fontSize: 12))),
+        Center(child: Text(_t('All past advisories up to date'), style: const TextStyle(color: AppColors.textSecondary, fontSize: 12))),
         const SizedBox(height: 48),
       ],
     );
@@ -737,8 +740,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     child: const Icon(Icons.grass, color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text('Batch #N-204 applied across 4.2 hec...', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Expanded(
+                    child: Text('${_t('Batch')} #N-204 ${_t('applied across')} 4.2 ${_t('hectares')}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary), overflow: TextOverflow.ellipsis),
                   ),
                   const Icon(Icons.chevron_right, size: 16, color: AppColors.textSecondary),
                 ],

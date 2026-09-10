@@ -44,31 +44,34 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  String _t(String key) =>
+      AppStrings.translate(key, context.read<AppSettingsProvider>().language);
+
   void _showWeatherForecastDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: const [
-            Icon(Icons.wb_sunny, color: Colors.orange),
-            SizedBox(width: 8),
-            Text('Rohtak Weather (5-Day)'),
+          children: [
+            const Icon(Icons.wb_sunny, color: Colors.orange),
+            const SizedBox(width: 8),
+            Expanded(child: Text(_t('Rohtak Weather (5-Day)'))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('• Today: 34°C, Clear Skies, Humid'),
-            Text('• Tomorrow: 33°C, Partly Cloudy'),
-            Text('• Day 3: 31°C, Moderate Rain Expected (15mm)'),
-            Text('• Day 4: 29°C, Heavy Rain Expected (25mm)'),
-            Text('• Day 5: 32°C, Sunny'),
+          children: [
+            Text('• ${_t('Today')}: 34°C, ${_t('Clear Skies')}, ${_t('Humid')}'),
+            Text('• ${_t('Tomorrow')}: 33°C, ${_t('Partly Cloudy')}'),
+            Text('• ${_t('Day')} 3: 31°C, ${_t('Moderate Rain Expected')} (15mm)'),
+            Text('• ${_t('Day')} 4: 29°C, ${_t('Heavy Rain Expected')} (25mm)'),
+            Text('• ${_t('Day')} 5: 32°C, ${_t('Sunny')}'),
           ],
         ),
         actions: [
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: Text(_t('Close'))),
         ],
       ),
     );
@@ -77,27 +80,27 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showSensorDetailDialog(BuildContext context, String title, String value,
       String status, {Reading? reading}) {
     final sampledAt = reading?.receivedAt ?? reading?.capturedAt;
-    final transmitted = sampledAt == null ? 'Not reported' : sampledAt.toLocal().toString();
+    final transmitted = sampledAt == null ? _t('Not reported') : sampledAt.toLocal().toString();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('$title Sensor Details'),
+        title: Text('$title — ${_t('Sensor Details')}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Current Reading: $value', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text('${_t('Current Reading')}: $value', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('Status: $status', style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w600)),
+            Text('${_t('Status')}: $status', style: const TextStyle(color: AppColors.primaryGreen, fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
-            Text('Device: ${reading?.deviceId ?? 'Not connected'}'),
-            Text('Zone: ${reading?.zoneId ?? 'Not reported'}'),
-            Text('Last received: $transmitted'),
+            Text('${_t('Device')}: ${reading?.deviceId ?? _t('Not connected')}'),
+            Text('${_t('Zone')}: ${reading?.zoneId ?? _t('Not reported')}'),
+            Text('${_t('Last received')}: $transmitted'),
           ],
         ),
         actions: [
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: Text(_t('OK'))),
         ],
       ),
     );
@@ -109,25 +112,25 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
-          children: const [
-            Icon(Icons.agriculture, color: AppColors.primaryGreen),
-            SizedBox(width: 8),
-            Text('Cotton Plot A Details'),
+          children: [
+            const Icon(Icons.agriculture, color: AppColors.primaryGreen),
+            const SizedBox(width: 8),
+            Expanded(child: Text(_t('Cotton Plot A Details'))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text('• Total Area: 4.5 hectares'),
-            Text('• Crop Stage: Day 78 (Boll Opening)'),
-            Text('• Health Score: 96% Healthy'),
-            Text('• Estimated Harvest: 22 days remaining'),
-            Text('• Expected Yield: 3.2 Tonnes/ha'),
+          children: [
+            Text('• ${_t('Total Area')}: 4.5 ${_t('hectares')}'),
+            Text('• ${_t('Crop Stage')}: ${_t('Day')} 78 (${_t('Boll Opening')})'),
+            Text('• ${_t('Health Score')}: 96% ${_t('Healthy')}'),
+            Text('• ${_t('Estimated Harvest')}: 22 ${_t('days remaining')}'),
+            Text('• ${_t('Expected Yield')}: 3.2 ${_t('Tonnes/ha')}'),
           ],
         ),
         actions: [
-          ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+          ElevatedButton(onPressed: () => Navigator.pop(context), child: Text(_t('Close'))),
         ],
       ),
     );
@@ -222,9 +225,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     : '${reading.zoneId} • ${reading.reportedMetricCount}/5 reporting',
                 onActionTap: () => _showSensorDetailDialog(
                   context,
-                  'Field Node',
-                  reading == null ? '--' : '${reading.reportedMetricCount}/5 metrics',
-                  provider.freshness.name,
+                  _t('Field Node'),
+                  reading == null ? '--' : '${reading.reportedMetricCount}/5 ${_t('metrics')}',
+                  _t('freshness.${provider.freshness.name}'),
                   reading: reading,
                 ),
               ),
@@ -250,7 +253,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildGreetingSection(Reading? reading, AppSettingsProvider settings) {
     final temp = '${Reading.display(reading?.temperatureC)}°C';
-    final greeting = '${AppStrings.translate('Good Morning', settings.language)},\n${settings.userName}';
+    final hour = DateTime.now().hour;
+    final greetingKey = hour < 12
+        ? 'Good Morning'
+        : hour < 17
+            ? 'Good Afternoon'
+            : 'Good Evening';
+    final greeting = '${AppStrings.translate(greetingKey, settings.language)},\n${settings.userName}';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -339,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Icon(Icons.wb_sunny, color: Color(0xFFF57C00), size: 16),
                 const SizedBox(width: 4),
                 Text(
-                  'Rohtak\n$temp',
+                  '${_t('Rohtak')}\n$temp',
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                 ),
               ],
@@ -353,13 +362,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildStatusPill(FarmStateProvider provider, EdgeConfig edge, AppSettingsProvider settings) {
     final freshness = provider.freshness;
     final ago = provider.lastFetchTime == null
-        ? 'never'
-        : '${DateTime.now().difference(provider.lastFetchTime!).inMinutes}m ago';
+        ? _t('never')
+        : '${DateTime.now().difference(provider.lastFetchTime!).inMinutes}${_t('m ago')}';
     final label = freshness == DataFreshness.live
         ? AppStrings.translate('Live • Synced just now', settings.language)
         : freshness == DataFreshness.stale
-            ? 'Stale • Synced $ago'
-            : 'Offline Ready • Synced $ago';
+            ? '${_t('Stale • Synced')} $ago'
+            : '${_t('Offline Ready • Synced')} $ago';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -399,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 6),
-        Text('Edge: ${edge.normalizedBaseUrl} • ${edge.zoneId}',
+        Text('${_t('Edge')}: ${edge.normalizedBaseUrl} • ${edge.zoneId}',
             style: const TextStyle(fontSize: 11, color: AppColors.textTertiary)),
       ],
     );
@@ -412,7 +421,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (topAlert != null) {
       title = AppStrings.translate(topAlert.title as String, context.read<AppSettingsProvider>().language);
       message = AppStrings.translate(topAlert.message as String, context.read<AppSettingsProvider>().language);
-      tag = AppStrings.translate('${topAlert.severity.toString().toUpperCase()} • ${topAlert.type.toString().toUpperCase()} ALERT', context.read<AppSettingsProvider>().language);
+      // Translate the parts, not the composed string: the interpolated form can
+      // never match a dictionary key.
+      final severity = _t('severity.${topAlert.severity}');
+      final type = _t('alertType.${topAlert.type}');
+      tag = '$severity • $type ${_t('ALERT')}';
     } else {
       title = AppStrings.translate('Whitefly Infestation Detected Nearby', context.read<AppSettingsProvider>().language);
       message = AppStrings.translate('Active in North Cotton field — apply organic neem spray before 5:00 PM to secure boll formation.', context.read<AppSettingsProvider>().language);
@@ -610,8 +623,9 @@ class _HomeScreenState extends State<HomeScreen> {
           assetPath: 'assets/rainfall.png',
           iconColor: Colors.blueGrey,
           iconBg: Colors.blueGrey[50]!,
-          onTap: () => _showSensorDetailDialog(context, 'Rainfall', rainfall,
-              rainfallStatus.text, reading: reading),
+          onTap: () => _showSensorDetailDialog(context,
+              AppStrings.translate('Rainfall', lang), rainfall,
+              AppStrings.translate(rainfallStatus.text, lang), reading: reading),
         ),
         _buildSensorCard(
           title: AppStrings.translate('Water Level', lang),
@@ -623,8 +637,9 @@ class _HomeScreenState extends State<HomeScreen> {
           assetPath: 'assets/water_droplet.png',
           iconColor: Colors.blue[700]!,
           iconBg: Colors.blue[50]!,
-          onTap: () => _showSensorDetailDialog(context, 'Water Level', waterLevel,
-              waterStatus.text, reading: reading),
+          onTap: () => _showSensorDetailDialog(context,
+              AppStrings.translate('Water Level', lang), waterLevel,
+              AppStrings.translate(waterStatus.text, lang), reading: reading),
         ),
       ],
     );
@@ -746,7 +761,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(4)),
-                      child: const Text('4.5 ha', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      child: Text('4.5 ${_t('ha')}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -772,21 +787,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(color: const Color(0xFF5EE085), borderRadius: BorderRadius.circular(12)),
-                          child: const Text('• 96% Healthy', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                          child: Text('• 96% ${_t('Healthy')}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Row(
-                      children: const [
-                        Icon(Icons.calendar_today, size: 12, color: AppColors.textSecondary),
-                        SizedBox(width: 4),
-                        Text('Day 78', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                        SizedBox(width: 6),
-                        Text('•', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                        SizedBox(width: 6),
+                      children: [
+                        const Icon(Icons.calendar_today, size: 12, color: AppColors.textSecondary),
+                        const SizedBox(width: 4),
+                        Text('${_t('Day')} 78', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        const SizedBox(width: 6),
+                        const Text('•', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        const SizedBox(width: 6),
                         Expanded(
-                          child: Text('Boll Opening', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen), overflow: TextOverflow.ellipsis),
+                          child: Text(_t('Boll Opening'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryGreen), overflow: TextOverflow.ellipsis),
                         ),
                       ],
                     ),
@@ -800,9 +815,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 6),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text('Harvest window in 22 days', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                        Text('72%', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                      children: [
+                        Text('${_t('Harvest window in')} 22 ${_t('days')}', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                        const Text('72%', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                       ],
                     ),
                   ],
@@ -836,7 +851,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(AppStrings.translate('Scheduled Irrigation', settings.language), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                 const SizedBox(height: 4),
-                const Text('Next cycle at 05:30 PM (Zone 2)', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text('${_t('Next cycle at')} 05:30 PM (${_t('Zone')} 2)', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
           ),
@@ -849,7 +864,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Adjust', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            child: Text(_t('Adjust'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           ),
         ],
       ),

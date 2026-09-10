@@ -78,14 +78,24 @@ class _FarmAssistantScreenState extends State<FarmAssistantScreen> {
         if (mounted) {
           setState(() => _listening = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Speech recognition unavailable: ${error.errorMsg}')),
+            SnackBar(content: Text('${_copy(
+                context.read<AppSettingsProvider>().language,
+                'Speech recognition unavailable',
+                'आवाज़ पहचान उपलब्ध नहीं है',
+                'आवाज़ पिछाणण ना हो रह्या',
+                'ਆਵਾਜ਼ ਪਛਾਣ ਉਪਲਬਧ ਨਹੀਂ')}: ${error.errorMsg}')),
           );
         }
       },
     );
     if (!available) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Speech recognition is unavailable. Type your question instead.'),
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(_copy(
+            context.read<AppSettingsProvider>().language,
+            'Speech recognition is unavailable. Type your question instead.',
+            'आवाज़ पहचान उपलब्ध नहीं है। अपना सवाल टाइप करें।',
+            'आवाज़ पिछाणण ना हो रह्या। अपणा सवाल टाइप करो।',
+            'ਆਵਾਜ਼ ਪਛਾਣ ਉਪਲਬਧ ਨਹੀਂ। ਆਪਣਾ ਸਵਾਲ ਟਾਈਪ ਕਰੋ।')),
       ));
       return;
     }
@@ -163,12 +173,16 @@ class _FarmAssistantScreenState extends State<FarmAssistantScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Row(mainAxisSize: MainAxisSize.min, children: [
-          CitadelLogo(size: 38), SizedBox(width: 8), Text('Citadel Assistant'),
+        title: Row(mainAxisSize: MainAxisSize.min, children: [
+          const CitadelLogo(size: 38), const SizedBox(width: 8),
+          Text(_copy(language, 'Citadel Assistant', 'सिटाडेल सहायक',
+              'सिटाडेल सहायक', 'ਸਿਟਾਡੇਲ ਸਹਾਇਕ')),
         ]),
         actions: [
           if (_speaking) IconButton(onPressed: _stopSpeaking,
-            tooltip: 'Stop speaking', icon: const Icon(Icons.stop_circle_outlined)),
+            tooltip: _copy(language, 'Stop speaking', 'बोलना बंद करें',
+                'बोलणा बंद करो', 'ਬੋਲਣਾ ਬੰਦ ਕਰੋ'),
+            icon: const Icon(Icons.stop_circle_outlined)),
         ],
       ),
       body: Column(children: [
@@ -177,11 +191,15 @@ class _FarmAssistantScreenState extends State<FarmAssistantScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(color: AppColors.cardYellowBg,
             borderRadius: BorderRadius.circular(12)),
-          child: const Row(children: [
-            Icon(Icons.wifi, size: 18, color: AppColors.severityWarning),
-            SizedBox(width: 8),
-            Expanded(child: Text('Online feature • Local monitoring continues if this assistant disconnects.',
-              style: TextStyle(fontSize: 12))),
+          child: Row(children: [
+            const Icon(Icons.wifi, size: 18, color: AppColors.severityWarning),
+            const SizedBox(width: 8),
+            Expanded(child: Text(_copy(language,
+                'Online feature • Local monitoring continues if this assistant disconnects.',
+                'ऑनलाइन सुविधा • यह सहायक बंद हो जाए तो भी स्थानीय निगरानी चालू रहेगी।',
+                'ऑनलाइन सुविधा • ये सहायक बंद हो जावै तो भी लोकल निगरानी चालू रहवैगी।',
+                'ਆਨਲਾਈਨ ਸੁਵਿਧਾ • ਇਹ ਸਹਾਇਕ ਬੰਦ ਹੋਵੇ ਤਾਂ ਵੀ ਸਥਾਨਕ ਨਿਗਰਾਨੀ ਚਾਲੂ ਰਹੇਗੀ।'),
+              style: const TextStyle(fontSize: 12))),
           ]),
         ),
         Expanded(child: ListView.builder(

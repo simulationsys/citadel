@@ -121,10 +121,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   Widget _periodPicker(AppLanguage language) {
     return SegmentedButton<int>(
-      segments: const [
-        ButtonSegment(value: 24, label: Text('24h')),
-        ButtonSegment(value: 168, label: Text('7 days')),
-        ButtonSegment(value: 720, label: Text('30 days')),
+      segments: [
+        const ButtonSegment(value: 24, label: Text('24h')),
+        ButtonSegment(value: 168, label: Text('7 ${_copy(language, 'days', 'दिन', 'दिन', 'ਦਿਨ')}')),
+        ButtonSegment(value: 720, label: Text('30 ${_copy(language, 'days', 'दिन', 'दिन', 'ਦਿਨ')}')),
       ],
       selected: {_hours},
       onSelectionChanged: (selection) => setState(() => _hours = selection.first),
