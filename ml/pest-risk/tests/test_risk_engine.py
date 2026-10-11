@@ -25,6 +25,13 @@ class RiskEngineTests(unittest.TestCase):
         types = {item.type for item in evaluate(reading, [PestObservation("whitefly", 0.2, 9)])}
         self.assertNotIn("pest", types)
 
+    def test_confident_healthy_leaf_is_not_a_disease(self):
+        reading = SensorReading("node-1", soil_moisture_pct=50)
+        healthy = PestObservation("healthy", 0.96, crop_health=True)
+        blighted = PestObservation("early_blight_fungal", 0.89, crop_health=True)
+        self.assertNotIn("disease_risk", {item.type for item in evaluate(reading, [healthy])})
+        self.assertIn("disease_risk", {item.type for item in evaluate(reading, [blighted])})
+
 
 if __name__ == "__main__":
     unittest.main()

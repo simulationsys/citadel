@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "edge-api",
+      "runtimeExecutable": "services/edge-api/.venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "app.main:app", "--reload", "--port", "3001", "--app-dir", "services/edge-api"],
+      "port": 3001
+    }
+  ]
+}

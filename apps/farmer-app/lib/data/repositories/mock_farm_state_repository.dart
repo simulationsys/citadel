@@ -3,11 +3,15 @@ import 'dart:io';
 import '../models/advisory.dart';
 import '../models/crop_health_result.dart';
 import '../models/farm_state.dart';
+import '../models/irrigation_request.dart';
+import '../models/farm_analytics_report.dart';
+import '../models/farm_assistant_response.dart';
 import '../models/reading.dart';
 import 'farm_state_repository.dart';
 
-/// Mock implementation that returns realistic hardcoded data.
-/// Simulates network delay so the UI loading states can be tested.
+/// Hardcoded demo data. **Only ever reachable when demo mode is explicitly
+/// selected** — never as a silent fallback for an unreachable edge node. See
+/// [HybridFarmStateRepository] for why that fallback was removed.
 class MockFarmStateRepository implements FarmStateRepository {
   @override
   Future<FarmState> getFarmState() async {
@@ -15,6 +19,7 @@ class MockFarmStateRepository implements FarmStateRepository {
     await Future.delayed(const Duration(milliseconds: 800));
 
     return FarmState(
+      freshness: DataFreshness.live,
       reading: Reading(
         deviceId: 'field-node-01',
         zoneId: 'zone-a',
@@ -61,10 +66,40 @@ class MockFarmStateRepository implements FarmStateRepository {
   }
 
   @override
-  Future<void> approveIrrigation(String action,
-      {required bool approved}) async {
+  Future<IrrigationOutcome> decideIrrigation({
+    required bool approved,
+    String requestedBy = 'farmer-app',
+    int? maxRuntimeSec,
+  }) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    // In the mock, this is a no-op. The real implementation will POST to the
-    // edge API's actuation endpoint.
+    // Demo only. No relay command is produced, because no backend recorded an
+    // approval — a mock must not imply the pump was commanded.
+    final request = IrrigationRequest(
+      id: 'demo-request',
+      status: approved ? 'approved' : 'declined',
+      approvedBy: 'farmer',
+      maxRuntimeSec: maxRuntimeSec,
+    );
+    return IrrigationOutcome(
+      stage: approved ? IrrigationStage.approved : IrrigationStage.declined,
+      request: request,
+    );
+  }
+
+  @override
+  Future<FarmAnalyticsReport> analyzeFarm({int hours = 168}) async =>
+      FarmAnalyticsReport(
+        zoneId: 'demo-zone', generatedAt: DateTime.now(), periodHours: hours,
+        readingCount: 0, completenessPct: 0, cropScanCount: 0,
+        irrigationRequestCount: 0, approvedIrrigationCount: 0,
+        metrics: const {}, risks: const {}, cropLabels: const {},
+        recommendations: const [FarmRecommendation(priority: 'low',
+          title: 'Demo mode', message: 'Connect to the edge node for a real report.')],
+      );
+
+  @override
+  Future<FarmAssistantResponse> askAssistant(String question, String language) {
+    throw const FarmAssistantException(
+        'The online assistant is unavailable in demo-data mode.');
   }
 }

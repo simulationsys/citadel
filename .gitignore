@@ -14,3 +14,8 @@ firmware/esp32-field-node/config.h
 *.db
 .venv/
 *.egg-info/
+*.db.bak
+.pio/
+firmware/esp32-field-node/field_node/config.h
+.venv-audit/
+services/edge-api/.env

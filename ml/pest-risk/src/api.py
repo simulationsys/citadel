@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import base64
+import binascii
 from functools import lru_cache
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from .crop_inference import MAX_IMAGE_BYTES, load_default_classifier
 from .pest_inference import ModelUnavailable, load_default_detector
 from .profiles import PROFILES, get_profile
 from .risk_engine import evaluate
@@ -60,14 +62,37 @@ def detector():
     return load_default_detector()
 
 
+@lru_cache(maxsize=1)
+def crop_classifier():
+    return load_default_classifier()
+
+
+def decode_image(value: str) -> bytes:
+    if len(value) > ((MAX_IMAGE_BYTES * 4) // 3) + 8:
+        raise ValueError("Image exceeds the 5 MB limit.")
+    try:
+        decoded = base64.b64decode(value, validate=True)
+    except (ValueError, binascii.Error) as error:
+        raise ValueError("imageBase64 must contain valid base64 without a data-URI prefix.") from error
+    if len(decoded) > MAX_IMAGE_BYTES:
+        raise ValueError("Image exceeds the 5 MB limit.")
+    return decoded
+
+
 @app.get("/health")
 def health() -> dict:
+    engines = {}
     try:
         detector()
-        model = "ready"
+        engines["pest"] = "ready"
     except ModelUnavailable:
-        model = "not_ready"
-    return {"status": "ok", "service": "citadel-pest-risk", "model": model, "profiles": list(PROFILES)}
+        engines["pest"] = "not_ready"
+    try:
+        crop_classifier()
+        engines["cropHealth"] = "ready"
+    except ModelUnavailable:
+        engines["cropHealth"] = "not_ready"
+    return {"status": "ok", "service": "citadel-pest-risk", "model": engines["pest"], "engines": engines, "profiles": list(PROFILES)}
 
 
 @app.get("/v1/profiles")
@@ -83,7 +108,7 @@ def evaluate_risk(request: RiskRequest) -> dict:
 @app.post("/v1/pest/analyze")
 def analyze_pest(request: ImageRequest) -> dict:
     try:
-        image_bytes = base64.b64decode(request.imageBase64, validate=True)
+        image_bytes = decode_image(request.imageBase64)
         observations = detector().analyze_bytes(image_bytes)
     except ModelUnavailable as error:
         raise HTTPException(status_code=503, detail={"code": "model_not_ready", "message": str(error)}) from error
@@ -92,11 +117,22 @@ def analyze_pest(request: ImageRequest) -> dict:
     return {"observations": [item.__dict__ for item in observations]}
 
 
+@app.post("/v1/crop-health/analyze")
+def analyze_crop_health(request: ImageRequest) -> dict:
+    try:
+        image_bytes = decode_image(request.imageBase64)
+        return {"result": crop_classifier().analyze_bytes(image_bytes)}
+    except ModelUnavailable as error:
+        raise HTTPException(status_code=503, detail={"code": "model_not_ready", "message": str(error)}) from error
+    except (ValueError, OSError) as error:
+        raise HTTPException(status_code=422, detail={"code": "invalid_image", "message": str(error)}) from error
+
+
 @app.post("/v1/farm-state")
 def farm_state(request: FarmStateRequest) -> dict:
     risk = evaluate_request(request)
     try:
-        image_bytes = base64.b64decode(request.imageBase64, validate=True)
+        image_bytes = decode_image(request.imageBase64)
         observations = detector().analyze_bytes(image_bytes)
     except ModelUnavailable as error:
         raise HTTPException(status_code=503, detail={"code": "model_not_ready", "message": str(error)}) from error

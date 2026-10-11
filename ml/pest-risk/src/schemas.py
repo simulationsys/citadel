@@ -31,8 +31,11 @@ class SensorReading:
             soil_moisture_pct=optional("soilMoisturePct", 0.0),
             temperature_c=optional("temperatureC"),
             humidity_pct=optional("humidityPct"),
-            rainfall_mm=float(value.get("rainfallMm", 0)),
-            water_level_pct=float(value.get("waterLevelPct", 0)),
+            # An explicit null means the same as an absent key: these two default
+            # to 0 because the firmware genuinely defaults them, and 0 rainfall /
+            # 0 water level can never raise a false flood alert.
+            rainfall_mm=float(value.get("rainfallMm") or 0),
+            water_level_pct=float(value.get("waterLevelPct") or 0),
         )
         for field_name in ("soil_moisture_pct", "humidity_pct", "water_level_pct"):
             v = getattr(reading, field_name)

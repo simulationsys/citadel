@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 import 'package:citadel_farmer_app/app.dart';
+import 'package:citadel_farmer_app/core/config/app_settings_provider.dart';
 import 'package:citadel_farmer_app/core/config/edge_config.dart';
 import 'package:citadel_farmer_app/data/repositories/farm_state_repository.dart';
 import 'package:citadel_farmer_app/data/repositories/mock_farm_state_repository.dart';
@@ -12,6 +13,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          ChangeNotifierProvider(create: (_) => AppSettingsProvider()),
           ChangeNotifierProvider(create: (_) => EdgeConfig()),
           ChangeNotifierProvider(
             create: (_) => FarmStateProvider(MockFarmStateRepository()),

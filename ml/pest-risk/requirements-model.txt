@@ -1,3 +1,4 @@
 # Development: TensorFlow includes a TFLite interpreter.
+numpy>=1.26,<2
 tensorflow>=2.16,<2.18
 # Raspberry Pi deployment alternative: install the compatible tflite-runtime wheel.

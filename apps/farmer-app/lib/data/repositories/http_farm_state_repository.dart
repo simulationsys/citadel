@@ -1,51 +1,63 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../models/advisory.dart';
 import '../models/crop_health_result.dart';
 import '../models/farm_state.dart';
-import '../models/reading.dart';
+import '../models/irrigation_request.dart';
+import '../models/farm_analytics_report.dart';
+import '../models/farm_assistant_response.dart';
 import 'farm_state_repository.dart';
 
-/// HTTP implementation that talks to the edge API over the LAN so a physical
-/// phone can stay "connected with phone".
+/// Talks to the consolidated Python edge API (`services/edge-api`, port 3001)
+/// over the LAN.
 ///
-/// Endpoints used (see `services/edge-api/src/index.js`):
-/// - `GET /health`
-/// - `GET /v1/farm-state?zoneId=<zone>`
-/// - `POST /v1/readings` (not used by UI yet)
-/// - `POST /v1/crop-health?zoneId=<zone>` (raw JPEG bytes)
-/// - `POST /v1/irrigation/requests` + `POST /v1/irrigation/requests/:id/approve`
+/// Endpoints used:
+/// - `GET  /health`
+/// - `GET  /v1/farm-state?zoneId=<zone>`
+/// - `POST /v1/crop-health?zoneId=<zone>` — multipart, field name `image`
+/// - `POST /v1/irrigation/requests` → flat request object
+/// - `POST /v1/irrigation/requests/{id}/approve` | `/decline`
 ///
-/// Offline-first: the last good `FarmState` JSON is cached in
-/// SharedPreferences. On fetch failure the cached state is returned instead
-/// of throwing, so the UI never goes blank.
+/// **Offline policy.** Farm state falls back to the last cached payload, marked
+/// `fromCache` so the UI can label it stale. Crop scans and irrigation
+/// decisions do **not** fall back — they throw. There is no honest offline
+/// answer to "what disease is this?" or "did the pump turn on?", and inventing
+/// one is worse than an error message.
 class HttpFarmStateRepository implements FarmStateRepository {
   static const _kCacheKey = 'cached_farm_state_json';
 
   final String baseUrl;
   final String zoneId;
   final Duration timeout;
+  final http.Client _client;
 
   HttpFarmStateRepository({
     required this.baseUrl,
     this.zoneId = 'zone-a',
     this.timeout = const Duration(seconds: 6),
-  });
+    http.Client? client,
+  }) : _client = client ?? http.Client();
 
   String get _root => baseUrl.trim().replaceAll(RegExp(r'/+$'), '');
+
+  // ── Farm state ───────────────────────────────────────────────────────
 
   @override
   Future<FarmState> getFarmState() async {
     try {
       final uri = Uri.parse('$_root/v1/farm-state?zoneId=$zoneId');
-      final res = await http.get(uri).timeout(timeout);
-      if (res.statusCode != 200) throw HttpException('farm-state ${res.statusCode}');
-      final Map<String, dynamic> body = jsonDecode(res.body) as Map<String, dynamic>;
-      final state = _farmStateFromEdge(body);
+      final res = await _client.get(uri).timeout(timeout);
+      if (res.statusCode != 200) {
+        throw HttpException('farm-state ${res.statusCode}');
+      }
+      final body = jsonDecode(res.body);
+      if (body is! Map) throw const FormatException('farm-state body is not an object');
+      // Parse before caching: never cache a payload we could not read.
+      final state = FarmState.fromJson(body.cast<String, dynamic>());
       await _saveCache(res.body);
       return state;
     } catch (_) {
@@ -53,23 +65,6 @@ class HttpFarmStateRepository implements FarmStateRepository {
       if (cached != null) return cached;
       rethrow;
     }
-  }
-
-  /// Parse edge `farm-state` shape:
-  /// `{ zoneId, reading: {...}, advisories: [...], ... }`
-  FarmState _farmStateFromEdge(Map<String, dynamic> body) {
-    final readingJson = body['reading'] as Map<String, dynamic>? ?? body;
-    final advisoriesJson = (body['advisories'] as List<dynamic>?) ?? const [];
-    // Edge `capturedAt` may be missing on reading — tolerate it.
-    if (readingJson['capturedAt'] == null) {
-      readingJson['capturedAt'] = DateTime.now().toIso8601String();
-    }
-    return FarmState(
-      reading: Reading.fromJson(readingJson),
-      advisories: advisoriesJson
-          .map((e) => Advisory.fromJson((e as Map).cast<String, dynamic>()))
-          .toList(),
-    );
   }
 
   Future<void> _saveCache(String rawJson) async {
@@ -86,75 +81,236 @@ class HttpFarmStateRepository implements FarmStateRepository {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_kCacheKey);
       if (raw == null) return null;
-      final body = jsonDecode(raw) as Map<String, dynamic>;
-      // Cached payload may be the full edge body or just reading+advisories.
-      if (body['reading'] != null) return _farmStateFromEdge(body);
-      return FarmState.fromJson(body);
+      final body = jsonDecode(raw);
+      if (body is! Map) return null;
+      // fromCache forces freshness to stale regardless of what the server said
+      // when this was captured.
+      return FarmState.fromJson(body.cast<String, dynamic>(), fromCache: true);
     } catch (_) {
       return null;
     }
   }
 
+  // ── Crop health ──────────────────────────────────────────────────────
+
   @override
   Future<CropHealthResult> submitImage(File image) async {
-    final bytes = await image.readAsBytes();
     final uri = Uri.parse('$_root/v1/crop-health?zoneId=$zoneId');
+    http.Response res;
     try {
-      final res = await http
-          .post(uri, headers: {'Content-Type': 'image/jpeg'}, body: bytes)
-          .timeout(const Duration(seconds: 30));
-      if (res.statusCode == 200) {
-        return CropHealthResult.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
-      }
-      throw HttpException('crop-health ${res.statusCode}: ${res.body}');
-    } catch (_) {
-      // Offline fallback: simulate a result after a short delay so the
-      // scan flow still works in the field.
-      await Future.delayed(const Duration(seconds: 1));
-      return const CropHealthResult(
-        crop: 'unknown',
-        label: 'inconclusive',
-        confidence: 0.0,
-        imageQuality: 'poor',
-      );
+      // FastAPI declares `image: UploadFile = File(...)`, so this must be a
+      // multipart form with the field named `image` — not raw JPEG bytes.
+      final request = http.MultipartRequest('POST', uri)
+        ..files.add(await http.MultipartFile.fromPath('image', image.path));
+      final streamed = await _client
+          .send(request)
+          .timeout(const Duration(seconds: 40));
+      res = await http.Response.fromStream(streamed);
+    } on TimeoutException catch (e) {
+      throw CropScanException(CropScanFailure.timeout, '$e');
+    } on SocketException catch (e) {
+      throw CropScanException(CropScanFailure.networkUnavailable, '$e');
+    } on http.ClientException catch (e) {
+      throw CropScanException(CropScanFailure.networkUnavailable, '$e');
     }
+
+    switch (res.statusCode) {
+      case 200:
+        break;
+      case 503:
+        throw CropScanException(CropScanFailure.modelUnavailable,
+            _detail(res.body), statusCode: 503);
+      case 502:
+        throw CropScanException(CropScanFailure.badModelOutput,
+            _detail(res.body), statusCode: 502);
+      case 504:
+        throw CropScanException(CropScanFailure.timeout,
+            _detail(res.body), statusCode: 504);
+      default:
+        throw CropScanException(CropScanFailure.serverError,
+            'HTTP ${res.statusCode}: ${_detail(res.body)}',
+            statusCode: res.statusCode);
+    }
+
+    try {
+      final body = jsonDecode(res.body);
+      if (body is! Map) throw const FormatException('not an object');
+      return CropHealthResult.fromJson(body.cast<String, dynamic>());
+    } catch (e) {
+      throw CropScanException(CropScanFailure.malformedResponse, '$e', statusCode: 200);
+    }
+  }
+
+  /// FastAPI puts our structured errors under `detail`.
+  static String _detail(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map && decoded['detail'] != null) {
+        final detail = decoded['detail'];
+        if (detail is Map && detail['message'] != null) return '${detail['message']}';
+        return '$detail';
+      }
+    } catch (_) {
+      // fall through to the raw body
+    }
+    return body.length > 300 ? body.substring(0, 300) : body;
+  }
+
+  // ── Irrigation ───────────────────────────────────────────────────────
+
+  @override
+  Future<IrrigationOutcome> decideIrrigation({required bool approved,
+      String requestedBy = 'farmer-app', int? maxRuntimeSec}) async {
+    final request = await createIrrigationRequest(
+        requestedBy: requestedBy, maxRuntimeSec: maxRuntimeSec);
+    return approved
+        ? approveIrrigationRequest(request.id, maxRuntimeSec: maxRuntimeSec)
+        : declineIrrigationRequest(request.id);
+  }
+
+  Future<IrrigationRequest> createIrrigationRequest(
+      {String requestedBy = 'farmer-app', int? maxRuntimeSec}) async {
+    final res = await _postJson('$_root/v1/irrigation/requests', {
+      'zoneId': zoneId,
+      'requestedBy': requestedBy,
+      if (maxRuntimeSec != null) 'maxRuntimeSec': maxRuntimeSec,
+    });
+    if (res.statusCode != 201) {
+      throw IrrigationException('create returned ${res.statusCode}: ${_detail(res.body)}',
+          statusCode: res.statusCode);
+    }
+    // The create response is FLAT. fromAny also accepts the wrapped shape so
+    // this cannot silently break again if the contract is ever normalised.
+    final request = IrrigationRequest.fromAny(_decode(res.body));
+    if (request == null) {
+      throw const IrrigationException('create response contained no request id');
+    }
+    return request;
+  }
+
+  Future<IrrigationOutcome> approveIrrigationRequest(String id,
+      {int? maxRuntimeSec}) async {
+    final res = await _postJson('$_root/v1/irrigation/requests/$id/approve', {
+      'approvedBy': 'farmer',
+      if (maxRuntimeSec != null) 'maxRuntimeSec': maxRuntimeSec,
+    });
+    if (res.statusCode != 200) {
+      throw IrrigationException('approve returned ${res.statusCode}: ${_detail(res.body)}',
+          statusCode: res.statusCode);
+    }
+    final body = _decode(res.body);
+    final request = IrrigationRequest.fromAny(body);
+    // Only report approval if the backend actually says approved.
+    if (request == null || !request.isApproved) {
+      throw const IrrigationException(
+          'approve succeeded but the request is not in the approved state');
+    }
+    return IrrigationOutcome(
+      stage: IrrigationStage.approved,
+      request: request,
+      command: RelayCommand.fromJson(
+          body is Map ? body.cast<String, dynamic>()['command'] : null),
+    );
+  }
+
+  Future<IrrigationOutcome> declineIrrigationRequest(String id) async {
+    final res = await _postJson('$_root/v1/irrigation/requests/$id/decline', {
+      'approvedBy': 'farmer',
+    });
+    if (res.statusCode != 200) {
+      throw IrrigationException('decline returned ${res.statusCode}: ${_detail(res.body)}',
+          statusCode: res.statusCode);
+    }
+    final request = IrrigationRequest.fromAny(_decode(res.body));
+    if (request == null || !request.isDeclined) {
+      throw const IrrigationException(
+          'decline succeeded but the request is not in the declined state');
+    }
+    return IrrigationOutcome(stage: IrrigationStage.declined, request: request);
+  }
+
+  Future<http.Response> _postJson(String url, Map<String, dynamic> body) async {
+    try {
+      return await _client
+          .post(Uri.parse(url),
+              headers: const {'Content-Type': 'application/json'},
+              body: jsonEncode(body))
+          .timeout(timeout);
+    } on TimeoutException catch (e) {
+      throw IrrigationException('timeout contacting edge node: $e');
+    } on SocketException catch (e) {
+      throw IrrigationException('edge node unreachable: $e');
+    } on http.ClientException catch (e) {
+      throw IrrigationException('edge node unreachable: $e');
+    }
+  }
+
+  static dynamic _decode(String body) {
+    try {
+      return jsonDecode(body);
+    } on FormatException catch (e) {
+      throw IrrigationException('unreadable response: $e');
+    }
+  }
+
+  // ── Diagnostics ──────────────────────────────────────────────────────
+
+  /// Settings → Test Connection.
+  Future<String> testConnection() async {
+    final res = await _client.get(Uri.parse('$_root/health'))
+        .timeout(const Duration(seconds: 5));
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body) as Map<String, dynamic>;
+      final model = body['modelStatus']?['cropHealth']?['available'] == true
+          ? 'crop AI ready'
+          : 'crop AI unavailable';
+      return 'Connected — ${body['service']} (${body['mode']}, $model)';
+    }
+    return 'Responded with status ${res.statusCode}';
   }
 
   @override
-  Future<void> approveIrrigation(String action, {required bool approved}) async {
-    // Record an irrigation request; approval endpoint needs a request id, so
-    // we create-then-approve. Failures are swallowed (queued offline).
-    try {
-      final createUri = Uri.parse('$_root/v1/irrigation/requests');
-      final created = await http
-          .post(createUri,
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({'zoneId': zoneId, 'requestedBy': 'farmer-app:$action'}))
-          .timeout(timeout);
-      if (created.statusCode != 201) return;
-      final id = (jsonDecode(created.body) as Map)['request']?['id'] as String?;
-      if (id == null) return;
-      if (approved) {
-        final approveUri = Uri.parse('$_root/v1/irrigation/requests/$id/approve');
-        await http
-            .post(approveUri,
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode({'approvedBy': 'farmer'}))
-            .timeout(timeout);
-      }
-    } catch (_) {
-      // Offline — action stays queued locally (no-op for MVP).
+  Future<FarmAnalyticsReport> analyzeFarm({int hours = 168}) async {
+    final uri = Uri.parse('$_root/v1/analytics/report?zoneId=$zoneId&hours=$hours');
+    final response = await _client.get(uri).timeout(timeout);
+    if (response.statusCode != 200) {
+      throw HttpException('analytics ${response.statusCode}: ${_detail(response.body)}');
     }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) throw const FormatException('analytics body is not an object');
+    return FarmAnalyticsReport.fromJson(decoded.cast<String, dynamic>());
   }
 
-  /// Lightweight connectivity probe used by Settings → Test Connection.
-  Future<String> testConnection() async {
-    final uri = Uri.parse('$_root/health');
-    final res = await http.get(uri).timeout(const Duration(seconds: 5));
-    if (res.statusCode == 200) {
-      final body = jsonDecode(res.body);
-      return 'Connected — ${body['service']} (${body['mode']})';
+  @override
+  Future<FarmAssistantResponse> askAssistant(String question, String language) async {
+    late http.Response response;
+    try {
+      response = await _client.post(
+        Uri.parse('$_root/v1/assistant/ask'),
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode({'question': question, 'zoneId': zoneId, 'language': language}),
+      ).timeout(const Duration(seconds: 25));
+    } on TimeoutException {
+      throw const FarmAssistantException('The online assistant took too long to respond.');
+    } on SocketException {
+      throw const FarmAssistantException(
+          'Internet is unavailable. Local farm monitoring is still working.');
+    } on http.ClientException {
+      throw const FarmAssistantException(
+          'Cannot reach the online assistant. Local farm monitoring is still working.');
     }
-    return 'Responded with status ${res.statusCode}';
+    if (response.statusCode != 200) {
+      throw FarmAssistantException(_detail(response.body),
+          statusCode: response.statusCode);
+    }
+    final decoded = jsonDecode(response.body);
+    if (decoded is! Map) {
+      throw const FarmAssistantException('Assistant response was unreadable.');
+    }
+    final result = FarmAssistantResponse.fromJson(decoded.cast<String, dynamic>());
+    if (result.answer.trim().isEmpty) {
+      throw const FarmAssistantException('Assistant returned an empty answer.');
+    }
+    return result;
   }
 }

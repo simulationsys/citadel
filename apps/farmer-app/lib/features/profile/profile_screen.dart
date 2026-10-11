@@ -11,6 +11,7 @@ import '../../core/theme/app_colors.dart';
 import '../../data/repositories/farm_state_repository.dart';
 import '../../widgets/app_bottom_nav.dart';
 import '../../widgets/freshness_banner.dart';
+import '../../widgets/citadel_logo.dart';
 
 /// Farmer profile — allows editing farmer info, location, profile picture,
 /// and adding/managing Indian regional crops.
@@ -25,14 +26,14 @@ class ProfileScreen extends StatelessWidget {
         await settings.updateProfile(imagePath: picked.path);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppStrings.translate('Profile Photo Updated', settings.isHindi))),
+            SnackBar(content: Text(AppStrings.translate('Profile Photo Updated', settings.language))),
           );
         }
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating photo: $e')),
+          SnackBar(content: Text('${AppStrings.translate('Error updating photo', context.read<AppSettingsProvider>().language)}: $e')),
         );
       }
     }
@@ -49,13 +50,13 @@ class ProfileScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                AppStrings.translate('Change Profile Photo', settings.isHindi),
+                AppStrings.translate('Change Profile Photo', settings.language),
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.camera_alt, color: AppColors.primaryGreen),
-                title: Text(AppStrings.translate('Take Photo', settings.isHindi)),
+                title: Text(AppStrings.translate('Take Photo', settings.language)),
                 onTap: () {
                   Navigator.pop(context);
                   _pickProfileImage(context, settings, ImageSource.camera);
@@ -63,7 +64,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library, color: AppColors.primaryGreen),
-                title: Text(AppStrings.translate('Choose from Gallery', settings.isHindi)),
+                title: Text(AppStrings.translate('Choose from Gallery', settings.language)),
                 onTap: () {
                   Navigator.pop(context);
                   _pickProfileImage(context, settings, ImageSource.gallery);
@@ -86,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(AppStrings.translate('Edit Profile', settings.isHindi)),
+          title: Text(AppStrings.translate('Edit Profile', settings.language)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -94,7 +95,7 @@ class ProfileScreen extends StatelessWidget {
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
-                    labelText: AppStrings.translate('Farmer Name', settings.isHindi),
+                    labelText: AppStrings.translate('Farmer Name', settings.language),
                     prefixIcon: const Icon(Icons.person),
                   ),
                 ),
@@ -102,7 +103,7 @@ class ProfileScreen extends StatelessWidget {
                 TextField(
                   controller: locationController,
                   decoration: InputDecoration(
-                    labelText: AppStrings.translate('Location / Place', settings.isHindi),
+                    labelText: AppStrings.translate('Location / Place', settings.language),
                     prefixIcon: const Icon(Icons.location_on),
                   ),
                 ),
@@ -110,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
                 TextField(
                   controller: cycleController,
                   decoration: InputDecoration(
-                    labelText: AppStrings.translate('Farming Cycle', settings.isHindi),
+                    labelText: AppStrings.translate('Farming Cycle', settings.language),
                     prefixIcon: const Icon(Icons.grass),
                   ),
                 ),
@@ -120,7 +121,7 @@ class ProfileScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppStrings.translate('Cancel', settings.isHindi)),
+              child: Text(AppStrings.translate('Cancel', settings.language)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -131,7 +132,7 @@ class ProfileScreen extends StatelessWidget {
                 );
                 Navigator.pop(context);
               },
-              child: Text(AppStrings.translate('Save', settings.isHindi)),
+              child: Text(AppStrings.translate('Save', settings.language)),
             ),
           ],
         );
@@ -163,7 +164,7 @@ class ProfileScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        AppStrings.translate('Select Crops', settings.isHindi),
+                        AppStrings.translate('Select Crops', settings.language),
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       IconButton(
@@ -174,7 +175,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    AppStrings.translate('Select Indian Regional Crops', settings.isHindi),
+                    AppStrings.translate('Select Indian Regional Crops', settings.language),
                     style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 12),
@@ -189,7 +190,7 @@ class ProfileScreen extends StatelessWidget {
                           dense: true,
                           activeColor: AppColors.primaryGreen,
                           title: Text(
-                            AppStrings.translate(cropName, settings.isHindi),
+                            AppStrings.translate(cropName, settings.language),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           value: isSelected,
@@ -212,7 +213,7 @@ class ProfileScreen extends StatelessWidget {
                         child: TextField(
                           controller: customCropController,
                           decoration: InputDecoration(
-                            hintText: AppStrings.translate('Enter crop name', settings.isHindi),
+                            hintText: AppStrings.translate('Enter crop name', settings.language),
                             isDense: true,
                             border: const OutlineInputBorder(),
                           ),
@@ -227,7 +228,7 @@ class ProfileScreen extends StatelessWidget {
                             setSheetState(() {});
                           }
                         },
-                        child: Text(AppStrings.translate('Add New Crop', settings.isHindi)),
+                        child: Text(AppStrings.translate('Add New Crop', settings.language)),
                       ),
                     ],
                   ),
@@ -246,7 +247,7 @@ class ProfileScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppStrings.translate('Zone', settings.isHindi)),
+          title: Text(AppStrings.translate('Zone', settings.language)),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(labelText: 'Zone ID', hintText: 'zone-a'),
@@ -254,14 +255,14 @@ class ProfileScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppStrings.translate('Cancel', settings.isHindi)),
+              child: Text(AppStrings.translate('Cancel', settings.language)),
             ),
             ElevatedButton(
               onPressed: () {
                 edge.setZoneId(controller.text.isEmpty ? 'zone-a' : controller.text);
                 Navigator.pop(context);
               },
-              child: Text(AppStrings.translate('Save', settings.isHindi)),
+              child: Text(AppStrings.translate('Save', settings.language)),
             ),
           ],
         );
@@ -282,9 +283,13 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text(
-          AppStrings.translate('Profile', settings.isHindi),
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+        title: Row(
+          children: [
+            const CitadelLogo(size: 36),
+            const SizedBox(width: 8),
+            Text(AppStrings.translate('Profile', settings.language),
+              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+          ],
         ),
       ),
       body: ListView(
@@ -354,7 +359,7 @@ class ProfileScreen extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  AppStrings.translate(settings.userName, settings.isHindi),
+                                  AppStrings.translate(settings.userName, settings.language),
                                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -366,7 +371,7 @@ class ProfileScreen extends StatelessWidget {
                             ],
                           ),
                           Text(
-                            '${AppStrings.translate(settings.userLocation, settings.isHindi)} • ${AppStrings.translate(settings.farmingCycle, settings.isHindi)}',
+                            '${AppStrings.translate(settings.userLocation, settings.language)} • ${AppStrings.translate(settings.farmingCycle, settings.language)}',
                             style: const TextStyle(fontSize: 13, color: Colors.white70),
                           ),
                         ],
@@ -395,7 +400,7 @@ class ProfileScreen extends StatelessWidget {
                           const Icon(Icons.eco, color: AppColors.primaryGreen, size: 20),
                           const SizedBox(width: 8),
                           Expanded(child: Text(
-                            AppStrings.translate('Type of Crops Grown', settings.isHindi),
+                            AppStrings.translate('Type of Crops Grown', settings.language),
                             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -407,7 +412,7 @@ class ProfileScreen extends StatelessWidget {
                         style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8)),
                         onPressed: () => _showAddCropDialog(context, settings),
                         icon: const Icon(Icons.add, size: 16),
-                        label: Text(AppStrings.translate('Add Crop', settings.isHindi), overflow: TextOverflow.ellipsis),
+                        label: Text(AppStrings.translate('Add Crop', settings.language), overflow: TextOverflow.ellipsis),
                       ),
                     ],
                   ),
@@ -416,7 +421,7 @@ class ProfileScreen extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: settings.userCrops.map((crop) {
-                      final translatedCrop = AppStrings.translate(crop, settings.isHindi);
+                      final translatedCrop = AppStrings.translate(crop, settings.language);
                       return Chip(
                         avatar: const Icon(Icons.grass, size: 16, color: AppColors.primaryGreen),
                         label: Text(
@@ -436,39 +441,39 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           _row(
-            AppStrings.translate('Edge connection', settings.isHindi),
+            AppStrings.translate('Edge connection', settings.language),
             edge.normalizedBaseUrl,
             Icons.link,
             () => Navigator.pushNamed(context, '/settings'),
           ),
           _row(
-            AppStrings.translate('Zone', settings.isHindi),
+            AppStrings.translate('Zone', settings.language),
             edge.zoneId,
             Icons.grid_view,
             () => _showEditZoneDialog(context, edge, settings),
           ),
           _row(
-            AppStrings.translate('Data status', settings.isHindi),
+            AppStrings.translate('Data status', settings.language),
             '${freshness.name} • last sync ${_ago(provider.lastFetchTime)}',
             Icons.cloud_done_outlined,
             () => context.read<FarmStateProvider>().refreshFarmState(),
           ),
           _row(
-            AppStrings.translate('Language', settings.isHindi),
-            settings.isHindi ? 'हिन्दी (Hindi)' : 'English',
+            AppStrings.translate('Language', settings.language),
+            settings.language.displayLabel,
             Icons.language,
-            () => settings.toggleLanguage(),
+            () => Navigator.pushNamed(context, '/settings'),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: () => Navigator.pushNamed(context, '/settings'),
             icon: const Icon(Icons.settings_outlined),
-            label: Text(AppStrings.translate('Connection & Settings', settings.isHindi)),
+            label: Text(AppStrings.translate('Connection & Settings', settings.language)),
           ),
           const SizedBox(height: 8),
-          const Center(
-            child: Text('Citadel Farmer App v0.1.0 • offline-first',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Center(
+            child: Text('${AppStrings.translate('Citadel Farmer App', settings.language)} v0.1.0 • ${AppStrings.translate('offline-first', settings.language)}',
+                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           ),
           const SizedBox(height: 48),
         ],

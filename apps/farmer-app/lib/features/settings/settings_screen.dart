@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/config/app_language.dart';
+import '../../core/config/app_settings_provider.dart';
+import '../../core/config/app_strings.dart';
 import '../../core/config/edge_config.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/repositories/http_farm_state_repository.dart';
+import '../../widgets/citadel_logo.dart';
 
 /// Settings screen — language toggle, edge API URL, connection test.
 ///
@@ -20,7 +24,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _urlController;
   late TextEditingController _zoneController;
-  String _language = 'English';
+  AppLanguage _language = AppLanguage.english;
   String? _connectionStatus;
   bool _isTesting = false;
   bool _isSaving = false;
@@ -33,6 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final edge = context.read<EdgeConfig>();
       _urlController = TextEditingController(text: edge.baseUrl);
       _zoneController = TextEditingController(text: edge.zoneId);
+      _language = context.read<AppSettingsProvider>().language;
       _init = true;
     }
   }
@@ -47,7 +52,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CitadelLogo(size: 36),
+            const SizedBox(width: 8),
+            Text(AppStrings.translate('Settings', context.read<AppSettingsProvider>().language)),
+          ],
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -56,21 +70,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Card(
             child: Padding(
               padding: const EdgeInsets.all(4),
-              child: RadioGroup<String>(
+              child: RadioGroup<AppLanguage>(
                 groupValue: _language,
-                onChanged: (String? v) { if (v != null) setState(() => _language = v); },
+                onChanged: (AppLanguage? v) {
+                  if (v != null) {
+                    setState(() => _language = v);
+                    context.read<AppSettingsProvider>().setLanguage(v);
+                  }
+                },
                 child: Column(
                   children: [
-                    RadioListTile<String>(
-                      title: const Text('English'),
-                      value: 'English',
-                      toggleable: false,
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('हिन्दी (Hindi)'),
-                      value: 'Hindi',
-                      toggleable: false,
-                    ),
+                    for (final lang in AppLanguage.values)
+                      RadioListTile<AppLanguage>(
+                        title: Text(lang.displayLabel),
+                        value: lang,
+                        toggleable: false,
+                      ),
                   ],
                 ),
               ),
@@ -87,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Phone and laptop must be on the same Wi-Fi. Use the laptop IPv4, e.g. http://192.168.1.10:3001',
+                    'Phone and Raspberry Pi must be on the same Wi-Fi. Use the Pi\'s IPv4, e.g. http://192.168.1.31:3001',
                     style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 12),
@@ -199,7 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await edge.setZoneId(_zoneController.text.isEmpty ? 'zone-a' : _zoneController.text);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Saved — ${edge.normalizedBaseUrl} • ${edge.zoneId}')),
+          SnackBar(content: Text('${AppStrings.translate('Saved', context.read<AppSettingsProvider>().language)} — ${edge.normalizedBaseUrl} • ${edge.zoneId}')),
         );
       }
     } finally {

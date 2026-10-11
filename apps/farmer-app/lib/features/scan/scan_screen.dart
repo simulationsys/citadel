@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -7,8 +7,9 @@ import 'package:provider/provider.dart';
 import '../../core/config/app_settings_provider.dart';
 import '../../core/config/app_strings.dart';
 import '../../core/theme/app_colors.dart';
-import '../../data/models/crop_health_result.dart';
 import '../../data/repositories/farm_state_repository.dart';
+import '../../widgets/profile_avatar_button.dart';
+import '../../widgets/citadel_logo.dart';
 import 'scan_result_screen.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -17,65 +18,43 @@ class ScanScreen extends StatefulWidget {
   @override
   State<ScanScreen> createState() => _ScanScreenState();
 }
-
 class _ScanScreenState extends State<ScanScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isAnalysing = false;
   bool _isSingleLeafMode = true;
-  bool _isFlashOn = false;
-  String _selectedCrop = 'Wheat (Plot B - North)';
+  String _selectedCrop = 'Tomato';
 
   void _toggleScanMode(bool singleLeaf) {
-    setState(() => _isSingleLeafMode = singleLeaf);
-  }
-
-  void _toggleFlash() {
-    setState(() => _isFlashOn = !_isFlashOn);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isFlashOn ? 'Camera Flash Enabled' : 'Camera Flash Disabled'), duration: const Duration(seconds: 1)),
-    );
+    if (!singleLeaf) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(AppStrings.translate(
+            'The current AI model analyzes a close-up of one tomato leaf.',
+            context.read<AppSettingsProvider>().language)),
+      ));
+      return;
+    }
+    setState(() => _isSingleLeafMode = true);
   }
 
   void _showCropPicker() {
-    final settings = context.read<AppSettingsProvider>();
-    final cropsList = settings.userCrops.isNotEmpty
-        ? settings.userCrops
-        : AppSettingsProvider.availableIndianCrops;
-
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.5),
+      builder: (context) => const Padding(
+        padding: EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              AppStrings.translate('Select Active Crop', settings.isHindi),
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'Tomato crop-health model',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 12),
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: cropsList.length,
-                itemBuilder: (context, index) {
-                  final cropName = cropsList[index];
-                  final translatedCrop = AppStrings.translate(cropName, settings.isHindi);
-                  return ListTile(
-                    leading: const Icon(Icons.eco, color: AppColors.primaryGreen),
-                    title: Text(translatedCrop),
-                    selected: _selectedCrop == cropName,
-                    onTap: () {
-                      setState(() => _selectedCrop = cropName);
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
+            SizedBox(height: 12),
+            Text(
+              'The installed model is trained for tomato leaves. Other crops are not analyzed yet.',
             ),
+            SizedBox(height: 16),
           ],
         ),
       ),
@@ -93,17 +72,17 @@ class _ScanScreenState extends State<ScanScreen> {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
           const SizedBox(height: 20),
-          Row(children: [const Icon(Icons.lightbulb_rounded, color: Colors.amber), const SizedBox(width: 10), Expanded(child: Text(AppStrings.translate('Scanning Best Practices', settings.isHindi), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)))]),
+          Row(children: [const Icon(Icons.lightbulb_rounded, color: Colors.amber), const SizedBox(width: 10), Expanded(child: Text(AppStrings.translate('Scanning Best Practices', settings.language), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)))]),
           const SizedBox(height: 16),
-          Text(AppStrings.translate('1. Focus on affected leaves showing discoloration or spots.', settings.isHindi)),
+          Text(AppStrings.translate('1. Focus on affected leaves showing discoloration or spots.', settings.language)),
           const SizedBox(height: 10),
-          Text(AppStrings.translate('2. Keep distance at 15-20 cm from plant surface.', settings.isHindi)),
+          Text(AppStrings.translate('2. Keep distance at 15-20 cm from plant surface.', settings.language)),
           const SizedBox(height: 10),
-          Text(AppStrings.translate('3. Ensure clear daylight or turn on Flash in low light.', settings.isHindi)),
+          Text(AppStrings.translate('3. Ensure clear daylight or turn on Flash in low light.', settings.language)),
           const SizedBox(height: 10),
-          Text(AppStrings.translate('4. Keep camera steady for accurate AI confidence rating.', settings.isHindi)),
+          Text(AppStrings.translate('4. Keep camera steady for accurate AI confidence rating.', settings.language)),
           const SizedBox(height: 20),
-          ElevatedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(AppStrings.translate('Got it!', settings.isHindi))),
+          ElevatedButton(onPressed: () => Navigator.pop(sheetContext), child: Text(AppStrings.translate('Got it!', settings.language))),
         ]),
       ),
     );
@@ -127,51 +106,41 @@ class _ScanScreenState extends State<ScanScreen> {
       if (!mounted) return;
       setState(() => _isAnalysing = false);
 
+      // An infrastructure failure has no result to show. Surfacing the error
+      // is the point: a fabricated "inconclusive" would make a dead AI
+      // pipeline look like a working one that simply wasn't sure.
+      final result = provider.lastScanResult;
+      if (result == null) {
+        final failure = provider.lastScanError;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          backgroundColor: AppColors.severityCritical,
+          duration: const Duration(seconds: 6),
+          content: Text(failure?.farmerMessage ??
+              'The scan could not be completed. Please try again.'),
+        ));
+        return;
+      }
+
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => ScanResultScreen(
             imageFile: File(picked.path),
-            result: provider.lastScanResult!,
+            result: result,
           ),
         ),
       );
     } catch (e) {
-      setState(() => _isAnalysing = false);
+      if (mounted) setState(() => _isAnalysing = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Camera Access Error: $e'),
-            action: SnackBarAction(
-              label: 'Sample Scan',
-              onPressed: _simulateCapture,
-            ),
+            backgroundColor: AppColors.severityCritical,
+            content: Text('${AppStrings.translate('Camera or image access failed', context.read<AppSettingsProvider>().language)}: $e'),
           ),
         );
       }
     }
-  }
-
-  void _simulateCapture() {
-    setState(() => _isAnalysing = true);
-    Future.delayed(const Duration(seconds: 1), () {
-      if (!mounted) return;
-      setState(() => _isAnalysing = false);
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ScanResultScreen(
-            imageFile: null,
-            result: CropHealthResult(
-              crop: _selectedCrop.split(' ').first,
-              label: 'rust',
-              confidence: 0.94,
-              imageQuality: 'acceptable',
-            ),
-          ),
-        ),
-      );
-    });
   }
 
   @override
@@ -217,28 +186,18 @@ class _ScanScreenState extends State<ScanScreen> {
         icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
         onPressed: () => Navigator.pop(context),
       ),
-      title: const Text(
-        'Crop Scanner',
-        style: TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.bold,
-          fontSize: 18,
-        ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CitadelLogo(size: 34),
+          const SizedBox(width: 8),
+          Text(AppStrings.translate('Crop Scanner', context.read<AppSettingsProvider>().language),
+              style: const TextStyle(
+                  color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+        ],
       ),
       centerTitle: true,
-      actions: [
-        InkWell(
-          onTap: () => Navigator.pushNamed(context, '/profile'),
-          child: Container(
-            margin: const EdgeInsets.only(right: 16),
-            width: 32,
-            height: 32,
-            color: Colors.grey[300],
-            alignment: Alignment.center,
-            child: const Text('img', style: TextStyle(fontSize: 10)),
-          ),
-        ),
-      ],
+      actions: const [ProfileAvatarButton(size: 32)],
     );
   }
 
@@ -321,17 +280,17 @@ class _ScanScreenState extends State<ScanScreen> {
                 ),
               ),
               InkWell(
-                onTap: _toggleFlash,
+                onTap: _showTipsDialog,
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _isFlashOn ? Colors.amber[100] : const Color(0xFFE8F0FE),
+                    color: const Color(0xFFE8F0FE),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _isFlashOn ? Icons.flash_on : Icons.flash_off,
-                    color: _isFlashOn ? Colors.orange[800] : AppColors.textPrimary,
+                    Icons.lightbulb_outline,
+                    color: AppColors.textPrimary,
                     size: 20,
                   ),
                 ),
@@ -357,7 +316,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  AppStrings.translate('ACTIVE CROP:', settings.isHindi),
+                  AppStrings.translate('ACTIVE CROP:', settings.language),
                   style: const TextStyle(
                     fontSize: 10,
                     color: AppColors.textSecondary,
@@ -367,7 +326,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    AppStrings.translate(_selectedCrop, settings.isHindi),
+                    AppStrings.translate(_selectedCrop, settings.language),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -380,7 +339,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 InkWell(
                   onTap: _showCropPicker,
                   child: Text(
-                    AppStrings.translate('Change', settings.isHindi),
+                    AppStrings.translate('Change', settings.language),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -693,3 +652,4 @@ class _ScanScreenState extends State<ScanScreen> {
     );
   }
 }
+
