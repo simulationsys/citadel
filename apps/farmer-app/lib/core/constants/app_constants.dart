@@ -1,3 +1,5 @@
+import '../../data/repositories/synthetic_farm_data.dart';
+
 /// App-wide constants.
 class AppConstants {
   AppConstants._();
@@ -11,7 +13,8 @@ class AppConstants {
   /// Polling interval for farm state refresh.
   /// Match the ESP32's 10-second reporting interval so a physical sensor
   /// change appears in the app on the next sample during field use and demos.
-  static const Duration pollInterval = Duration(seconds: 10);
+  /// Demo data refreshes faster so the numbers visibly move on camera.
+  static const Duration pollInterval = Duration(seconds: kDemoData ? 3 : 10);
 
   /// Data freshness thresholds. Mirrors FRESH_SEC/STALE_SEC in
   /// services/edge-api/app/main.py. The server's `freshness` field is

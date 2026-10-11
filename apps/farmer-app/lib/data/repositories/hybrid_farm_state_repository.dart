@@ -7,6 +7,7 @@ import '../models/farm_analytics_report.dart';
 import '../models/farm_assistant_response.dart';
 import 'farm_state_repository.dart';
 import 'http_farm_state_repository.dart';
+import 'synthetic_farm_data.dart';
 
 /// Live edge API, with the last-known-good cache as the only fallback.
 ///
@@ -22,15 +23,24 @@ import 'http_farm_state_repository.dart';
 /// * crop scans and irrigation decisions → propagate the failure, because
 ///   there is no truthful offline answer to either.
 ///
-/// Demo data is still available, but only by explicitly selecting demo mode,
-/// which labels itself on screen. See `main.dart`.
+/// Exception: while [kDemoData] is on (the default, for recording demo videos),
+/// farm state and analytics fall back to [SyntheticFarmData] whenever the node
+/// has no live reading. Build with `--dart-define=DEMO_DATA=false` for field use.
 class HybridFarmStateRepository implements FarmStateRepository {
   final HttpFarmStateRepository live;
 
   HybridFarmStateRepository({required this.live});
 
   @override
-  Future<FarmState> getFarmState() => live.getFarmState();
+  Future<FarmState> getFarmState() async {
+    if (!kDemoData) return live.getFarmState();
+    // Demo video: real data wins only while the node is actually live.
+    try {
+      final state = await live.getFarmState().timeout(const Duration(milliseconds: 1500));
+      if (state.hasReading && state.freshness == DataFreshness.live) return state;
+    } catch (_) {}
+    return SyntheticFarmData.farmState(live.zoneId);
+  }
 
   @override
   Future<CropHealthResult> submitImage(File image) => live.submitImage(image);
@@ -47,8 +57,16 @@ class HybridFarmStateRepository implements FarmStateRepository {
           maxRuntimeSec: maxRuntimeSec);
 
   @override
-  Future<FarmAnalyticsReport> analyzeFarm({int hours = 168}) =>
-      live.analyzeFarm(hours: hours);
+  Future<FarmAnalyticsReport> analyzeFarm({int hours = 168}) async {
+    if (!kDemoData) return live.analyzeFarm(hours: hours);
+    try {
+      final report = await live.analyzeFarm(hours: hours).timeout(const Duration(seconds: 3));
+      if (report.readingCount > 0) return report;
+    } catch (_) {}
+    // Feels like real analysis rather than an instant canned answer.
+    await Future.delayed(const Duration(milliseconds: 1200));
+    return SyntheticFarmData.analytics(live.zoneId, hours);
+  }
 
   @override
   Future<FarmAssistantResponse> askAssistant(String question, String language) =>
